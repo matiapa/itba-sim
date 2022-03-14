@@ -1,4 +1,8 @@
+package main.java;
+
+import java.io.*;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class CIM {
 
@@ -11,10 +15,7 @@ public class CIM {
         Particle p, float rc, int L, int M, int zone, boolean periodic
     ) {
         if(zone >=0 && zone < M*M) {
-            for (Particle c : particleZones.get(zone)) {
-                if (!p.equals(c) && (periodic ? p.periodicDistanceTo(c, L) : p.distanceTo(c)) <= rc)
-                    particleNeighbours.get(p).add(c);
-            }
+            particleNeighbours.get(p).addAll(particleZones.get(zone).stream().parallel().filter(c -> !p.equals(c) && (periodic ? p.periodicDistanceTo(c, L) : p.distanceTo(c)) <= rc).collect(Collectors.toList()));
         }
     }
 
@@ -75,19 +76,26 @@ public class CIM {
 
     }
 
-//    static public Map<Particle, Set<Particle>> findNeighboursBruteForce(Set<Particle> particles, float rc, int L, boolean periodic) {
-//        Map<Particle, Set<Particle>> particleNeighbours = new HashMap<>();
-//
-//        for(Particle p1 : particles) {
-//            particleNeighbours.put(p1, new HashSet<>());
-//            for(Particle p2 : particles) {
-//                double distance = periodic ? p1.periodicDistanceTo(p2, L) : p1.distanceTo(p2);
-//                if(!p1.equals(p2) && distance <= rc) {
-//                    particleNeighbours.get(p1).add(p2);
-//                }
-//            }
-//        }
-//
-//        return particleNeighbours;
-//    }
+    public static void outputResult(Set<Particle> particles, int L) throws IOException {
+        FileWriter writer = new FileWriter("output.lmp");
+
+        writer.write("# Fcc Al oriented X=[100], Y=[010], Z=[001].\n" +
+                "\n" +
+                particles.size()+" atoms\n" +
+                "1 atom types\n" +
+                "\n" +
+                "0.00000000 "+L+" xlo xhi\n" +
+                "0.00000000 "+L+" ylo yhi\n" +
+                "0.00000000 "+L+" zlo zhi\n" +
+                "\n" +
+                "Atoms\n\n");
+
+        for (Particle particle : particles) {
+            writer.write(particle.getId()+" 1 "+particle.getX()+" "+particle.getY()+" 0\n");
+        }
+
+
+        writer.close();
+    }
+
 }

@@ -1,9 +1,0 @@
-{
-  "L": 10,
-  "Rc": 2,
-  "particles": [
-    {"radius": 1}, {"radius": 0}, {"radius": 0}, {"radius": 0}
-  ],
-  "M": 4,
-  "periodicContours": false
-}

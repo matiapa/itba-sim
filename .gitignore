@@ -1,12 +1,15 @@
 # Compiled class file
 *.class
 *.iml
+*.lmp
+target/
 
 # Log file
 *.log
 
 # BlueJ files
 *.ctxt
+input.txt
 
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
@@ -29,3 +32,4 @@ replay_pid*
 
 # Other
 stats.csv
+.DS_Store

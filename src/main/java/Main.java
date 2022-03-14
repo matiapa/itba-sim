@@ -1,7 +1,10 @@
+package main.java;
+
 import java.io.*;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -12,7 +15,7 @@ public class Main {
     public static void main(String[] args) throws IOException, ParseException {
         // Read input parameters
 
-        FileReader fr = new FileReader("static.json");
+        FileReader fr = new FileReader("src/main/resources/static.json");
         JSONObject json = (JSONObject) new JSONParser().parse(fr);
 
         Long L = (Long) json.get("L");
@@ -36,6 +39,7 @@ public class Main {
         // Execute Cell Index Method
 
         Map<Particle, Set<Particle>> particleNeighbours = CIM.findNeighbours(particles, rc, L.intValue(), M.intValue(), periodicContours);
+        CIM.outputResult(particles, L.intValue());
 
         // Print the results
 
