@@ -75,4 +75,19 @@ public class CIM {
 
     }
 
+//    static public Map<Particle, Set<Particle>> findNeighboursBruteForce(Set<Particle> particles, float rc, int L, boolean periodic) {
+//        Map<Particle, Set<Particle>> particleNeighbours = new HashMap<>();
+//
+//        for(Particle p1 : particles) {
+//            particleNeighbours.put(p1, new HashSet<>());
+//            for(Particle p2 : particles) {
+//                double distance = periodic ? p1.periodicDistanceTo(p2, L) : p1.distanceTo(p2);
+//                if(!p1.equals(p2) && distance <= rc) {
+//                    particleNeighbours.get(p1).add(p2);
+//                }
+//            }
+//        }
+//
+//        return particleNeighbours;
+//    }
 }
