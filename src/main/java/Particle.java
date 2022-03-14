@@ -58,7 +58,12 @@ public class Particle {
 
     @Override
     public String toString() {
-        return ""+id;
+        return "\nParticle{" +
+                "id=" + id +
+                ", x=" + x +
+                ", y=" + y +
+                ", r=" + r +
+                "}\n";
     }
 
     public int getId() {

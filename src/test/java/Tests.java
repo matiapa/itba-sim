@@ -1,8 +1,12 @@
+import org.junit.jupiter.api.Test;
+
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class Test {
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+public class Tests {
 
     private static Particle p(int id) {
         return new Particle(id, 0, 0, 0);
@@ -19,7 +23,8 @@ public class Test {
 
     // 0: 1, 3, 4 - 5: 4
 
-    public static void nonPeriodicTest() {
+    @Test
+    void nonPeriodicTest() {
         Set<Particle> particles = new HashSet<>();
 
         particles.add(new Particle(0, 0, 1, 0));
@@ -40,10 +45,8 @@ public class Test {
         Set<Particle> n0 = neighbours.get(p(0));
         Set<Particle> n5 = neighbours.get(p(5));
 
-        if(n0.equals(expectedN0) && n5.equals(expectedN5))
-            System.out.println("Passed!");
-        else
-            System.out.println("Failed");
+        assertEquals(expectedN0, n0);
+        assertEquals(expectedN5, n5);
     }
 
     // L=6, M=3, rc=1
@@ -59,7 +62,8 @@ public class Test {
 
     // R=1: 8
 
-    public static void periodicTest() {
+    @Test
+    void periodicTest() {
         Set<Particle> particles = new HashSet<>();
 
         particles.add(new Particle(0, 0, 0, 0));
@@ -97,14 +101,11 @@ public class Test {
         Set<Particle> n6 = neighbours.get(p(6));
         Set<Particle> n8 = neighbours.get(p(8));
 
-        if(n0.equals(expectedN0) && n2.equals(expectedN2) && n4.equals(expectedN4) && n6.equals(expectedN6) && n8.equals(expectedN8))
-            System.out.println("Passed!");
-        else
-            System.out.println("Failed");
-    }
-
-    public static void main(String[] args) {
-        periodicTest();
+        assertEquals(expectedN0, n0);
+        assertEquals(expectedN2, n2);
+        assertEquals(expectedN4, n4);
+        assertEquals(expectedN6, n6);
+        assertEquals(expectedN8, n8);
     }
 
 }

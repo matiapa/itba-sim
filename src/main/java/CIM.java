@@ -1,4 +1,6 @@
+import java.io.*;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class CIM {
 
@@ -11,10 +13,7 @@ public class CIM {
         Particle p, float rc, int L, int M, int zone, boolean periodic
     ) {
         if(zone >=0 && zone < M*M) {
-            for (Particle c : particleZones.get(zone)) {
-                if (!p.equals(c) && (periodic ? p.periodicDistanceTo(c, L) : p.distanceTo(c)) <= rc)
-                    particleNeighbours.get(p).add(c);
-            }
+            particleNeighbours.get(p).addAll(particleZones.get(zone).stream().parallel().filter(c -> !p.equals(c) && (periodic ? p.periodicDistanceTo(c, L) : p.distanceTo(c)) <= rc).collect(Collectors.toList()));
         }
     }
 
@@ -74,5 +73,30 @@ public class CIM {
         return particleNeighbours;
 
     }
+
+    public static void outputResult(Set<Particle> particles, int L) throws IOException {
+        FileWriter writer = new FileWriter("output.lmp");
+
+        writer.write("# Fcc Al oriented X=[100], Y=[010], Z=[001].\n" +
+                "\n" +
+                particles.size()+" atoms\n" +
+                "1 atom types\n" +
+                "\n" +
+                "0.00000000 "+L+" xlo xhi\n" +
+                "0.00000000 "+L+" ylo yhi\n" +
+                "0.00000000 "+L+" zlo zhi\n" +
+                "\n" +
+                "Atoms\n\n");
+
+        for (Particle particle : particles) {
+            writer.write(particle.getId()+" 1 "+particle.getX()+" "+particle.getY()+" 0\n");
+        }
+
+
+        writer.close();
+    }
+
+
+
 
 }
