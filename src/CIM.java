@@ -2,13 +2,13 @@ import java.util.*;
 
 public class CIM {
 
-    static int f(int x, int y) {
+    static private int f(int x, int y) {
         return Math.floorMod(x,y);
     }
 
-    static void addZoneNeighbours(
+    static private void addZoneNeighbours(
         ArrayList<Set<Particle>> particleZones, Map<Particle, Set<Particle>> particleNeighbours,
-        Particle p, int rc, int L, int M, int zone, boolean periodic
+        Particle p, float rc, int L, int M, int zone, boolean periodic
     ) {
         if(zone >=0 && zone < M*M) {
             for (Particle c : particleZones.get(zone)) {
@@ -18,7 +18,7 @@ public class CIM {
         }
     }
 
-    static Map<Particle, Set<Particle>> findNeighbours(Set<Particle> particles, int rc, int L, int M, boolean periodic) {
+    static public Map<Particle, Set<Particle>> findNeighbours(Set<Particle> particles, float rc, int L, int M, boolean periodic) {
 
         ArrayList<Set<Particle>> particleZones = new ArrayList<>();
         Map<Particle, Set<Particle>> particleNeighbours = new HashMap<>();
