@@ -3,6 +3,7 @@
 *.iml
 *.lmp
 target/
+out/
 
 # Log file
 *.log
