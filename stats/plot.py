@@ -5,16 +5,17 @@ import pandas as pd
 
 df = pd.read_csv('../output.csv', sep=',')
 
+colored_neighbours = list()
 x = df['x']
 y = df['y']
-size = df['r']+10
-color = df['color']
+size = df['r']**2
+r = df['r']
+neighbours = df['neighbours']
 cmap = plt.cm.hsv
-
-print(size)
+print(colored_neighbours)
 
 fig, ax = plt.subplots()
-sc = ax.scatter(x, y, s=size, c=color, cmap=cmap)
+sc = ax.scatter(x, y, s=size, cmap=cmap, picker=True)
 
 offsets = list(zip(x, y))
 for i, point in df.iterrows():
@@ -31,8 +32,22 @@ def update_annot(ind):
     index = int(ind["ind"])
     pos = sc.get_offsets()[ind["ind"][0]]
     annot.xy = pos
-    text = "id: {}\nr: {}".format(index, size[index]-10)
+    text = "id: {}\nr: {}\nneighbours: {}".format(index, r[index], neighbours[index])
+    annot.color = 'r'
     annot.set_text(text)
+    ax.scatter(pos[0], pos[1], color='r', s=size[index])
+    # if len(colored_neighbours) > 0:
+    for i in colored_neighbours:
+        ax.scatter(x[int(i)], y[int(i)], color='b', s=size[int(i)])
+
+    colored_neighbours.clear()
+    colored_neighbours.append(index)
+
+    neighbours_list = neighbours[index].replace('[', '').replace(']', '').split(',')
+    for i in neighbours_list:
+        ax.scatter(x[int(i)], y[int(i)], color='g', s=size[int(i)])
+        colored_neighbours.append(i)
+    
 
 def hover(event):
     vis = annot.get_visible()
@@ -47,6 +62,7 @@ def hover(event):
                 annot.set_visible(False)
                 fig.canvas.draw_idle()
 
+# fig.canvas.mpl_connect('pick_event', on_pick)
 
 fig.canvas.mpl_connect("motion_notify_event", hover)
 

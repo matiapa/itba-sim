@@ -42,9 +42,9 @@ public class Main {
         // Print the results
 
         for(Map.Entry<Particle, Set<Particle>> entry : particleNeighbours.entrySet()) {
-            System.out.printf("(%f, %f): ", entry.getKey().getX(), entry.getKey().getY());
+            System.out.printf("%d -> (%f, %f): ", entry.getKey().getId(), entry.getKey().getX(), entry.getKey().getY());
             entry.getValue().forEach(p  -> {
-                System.out.printf("(%f, %f) ", p.getX(), p.getY());
+                System.out.printf("%d -> (%f, %f) ", p.getId(), p.getX(), p.getY());
             });
             System.out.println("");
         }
