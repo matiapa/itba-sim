@@ -1,5 +1,3 @@
-package main.java;
-
 import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -76,22 +74,34 @@ public class CIM {
 
     }
 
-    public static void outputResult(Set<Particle> particles, int L) throws IOException {
-        FileWriter writer = new FileWriter("output.lmp");
+    public static void outputResult(Set<Particle> particles, Map<Particle, Set<Particle>> neighbours, int L) throws IOException {
+        FileWriter writer = new FileWriter("output.csv");
 
-        writer.write("# Fcc Al oriented X=[100], Y=[010], Z=[001].\n" +
-                "\n" +
-                particles.size()+" atoms\n" +
-                "1 atom types\n" +
-                "\n" +
-                "0.00000000 "+L+" xlo xhi\n" +
-                "0.00000000 "+L+" ylo yhi\n" +
-                "0.00000000 "+L+" zlo zhi\n" +
-                "\n" +
-                "Atoms\n\n");
+        writer.write("ID,x,y,r,color\n");
+//        writer.write("# Fcc Al oriented X=[100], Y=[010], Z=[001].\n" +
+//                "\n" +
+//                particles.size()+" atoms\n" +
+//                "1 atom types\n" +
+//                "\n" +
+//                "0.00000000 "+L+" xlo xhi\n" +
+//                "0.00000000 "+L+" ylo yhi\n" +
+//                "0.00000000 "+L+" zlo zhi\n" +
+//                "\n" +
+//                "Atoms\n\n");
+
+        Particle chosen = neighbours.entrySet().iterator().next().getKey();
 
         for (Particle particle : particles) {
-            writer.write(particle.getId()+" 1 "+particle.getX()+" "+particle.getY()+" 0\n");
+            writer.write(particle.getId()+","+particle.getX()+","+particle.getY()+","+particle.getR()+",");
+            if (neighbours.get(chosen).contains(particle)) {
+                writer.write('g');
+            } else if (particle.equals(chosen)) {
+                writer.write('b');
+            } else {
+                writer.write('r');
+            }
+            writer.write('\n');
+//            writer.write(particle.getId()+" 1 "+particle.getX()+" "+particle.getY()+" 0\n");
         }
 
 

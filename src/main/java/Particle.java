@@ -1,13 +1,11 @@
-package main.java;
-
 import java.util.Objects;
 
 public class Particle {
 
-    private int id;
-    private float x;
-    private float y;
-    private float r;
+    private final int id;
+    private final float x;
+    private final float y;
+    private final float r;
 
     public Particle(int id, float x, float y, float r) {
         this.id = id;

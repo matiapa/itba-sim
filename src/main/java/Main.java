@@ -1,5 +1,3 @@
-package main.java;
-
 import java.io.*;
 import java.util.HashSet;
 import java.util.Map;
@@ -39,7 +37,7 @@ public class Main {
         // Execute Cell Index Method
 
         Map<Particle, Set<Particle>> particleNeighbours = CIM.findNeighbours(particles, rc, L.intValue(), M.intValue(), periodicContours);
-        CIM.outputResult(particles, L.intValue());
+        CIM.outputResult(particles, particleNeighbours, L.intValue());
 
         // Print the results
 
