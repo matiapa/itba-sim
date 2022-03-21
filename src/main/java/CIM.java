@@ -9,35 +9,38 @@ public class CIM {
     }
 
     static private void addZoneNeighbours(
-            ArrayList<Set<Particle>> particleZones, Map<Particle, Set<Particle>> particleNeighbours,
-            Particle p, float rc, int L, int M, int zone, boolean periodic
+        Set<Particle> particleZones, Map<Particle, Set<Particle>> particleNeighbours,
+        Particle p, float rc, int L, int M, boolean periodic
     ) {
-        if(zone >=0 && zone < M*M) {
-            particleNeighbours.get(p).addAll(particleZones.get(zone).stream().parallel().filter(c -> !p.equals(c) && p.distanceTo(c, L, periodic) <= rc).collect(Collectors.toList()));
-        }
+        if (particleZones != null)
+            particleNeighbours.get(p).addAll(particleZones.stream().parallel().filter(c -> !p.equals(c) && p.distanceTo(c, L, periodic) <= rc).collect(Collectors.toList()));
     }
 
     static public Map<Particle, Set<Particle>> findNeighbours(Set<Particle> particles, float rc, int L, int M, boolean periodic) {
 
-        ArrayList<Set<Particle>> particleZones = new ArrayList<>();
         Map<Particle, Set<Particle>> particleNeighbours = new HashMap<>();
+        ArrayList<ArrayList<Set<Particle>>> zones = new ArrayList<>();
 
         // Add empty sets to particle zones
 
-        for(int i=0; i<M*M; i++)
-            particleZones.add(new HashSet<>());
+        for (int i = 0; i < M; i++) {
+            zones.add(new ArrayList<>());
+            ArrayList<Set<Particle>> column = zones.get(i);
+            for (int j = 0; j < M; j++) {
+                column.add(new HashSet<>());
+            }
+        }
 
         float zoneSize = (float) L / M;
 
         // Add particle to its corresponding zone
 
         for (Particle p : particles) {
-            // Get the zone number of the particle
-            int x_zone = (int) (p.getX() / zoneSize);
-            int y_zone = (int) (p.getY() / zoneSize);
-            int z = y_zone * M + x_zone;
+            // Get the zone coordinates of the particle
+            int x = (int) (p.getX() / zoneSize);
+            int y = (int) (p.getY() / zoneSize);
 
-            particleZones.get(z).add(p);
+            zones.get(x).get(y).add(p);
         }
 
         // Find neighbours of all particles
@@ -46,27 +49,35 @@ public class CIM {
             // Create a set for storing particle neighbours
             particleNeighbours.put(p, new HashSet<>());
 
-            // Get the zone number of the particle
-            int x_zone = (int) (p.getX() / zoneSize);
-            int y_zone = (int) (p.getY() / zoneSize);
-            int z = y_zone * M + x_zone;
+            // Get the zone coordinates of the particle
+            int x = (int) (p.getX() / zoneSize);
+            int y = (int) (p.getY() / zoneSize);
 
             // Check if particles on the near zones are neighbours
+            List<Set<Particle>> nearZonesNonPeriodic = Arrays.asList(
+                    x == 0 || y == 0 ? null : zones.get(x-1).get(y-1),                            // NO
+                    y == 0 ? null : zones.get(x).get(y-1),                                        // N
+                    x == M - 1 || y == 0 ? null : zones.get(x+1).get(y-1),                        // NE
+                    x == 0 ? null : zones.get(f(x-1, M)).get(y),                               // O
+                    zones.get(x).get(y),
+                    x == M - 1 ? null : zones.get(f(x+1,M)).get(y),                            // E
+                    x == 0 || y == M - 1 ? null : zones.get(f(x-1, M)).get(f(y+1, M)),      // SO
+                    y == M - 1 ? null : zones.get(x).get(f(y+1,M)),                            // S
+                    x == M - 1 || y == M - 1 ? null : zones.get(f(x+1,M)).get(f(y+1,M))     // SE
 
-            List<Integer> nearZonesNonPeriodic = Arrays.asList(
-                    z-(M+1), 	z-M,   z-(M-1),
-                    z-1,      	z,     z+1,
-                    z+(M-1), 	z+M,   z+(M+1)
             );
 
-            List<Integer> nearZonesPeriodic = Arrays.asList(
-                    z % M == 0 ? f((z-1), (M*M)) : z-(M+1),          f(z+(M-1)*M, (M*M)),    z % M == M-1 ? f((z+1-2*M), (M*M)) : z-(M-1),
-                    z % M == 0 ? z-1+M : z-1,                        z,                         z % M == M-1 ? z+1-M : z+1,
-                    z % M == 0 ? f((z-1+2*M), (M*M)) : z+(M-1),      f(z-(M-1)*M, (M*M)),    z % M == M-1 ? f((z+1), (M*M)) : z+(M+1)
+            List<Set<Particle>> nearZonesPeriodic = Arrays.asList(
+                    zones.get(f(x-1, M)).get(f(y-1, M)),     zones.get(x).get(f(y-1,M)),          zones.get(f(x+1,M)).get(f(y-1,M)),
+                    zones.get(f(x-1, M)).get(y),                zones.get(x).get(y),                    zones.get(f(x+1,M)).get(y),
+                    zones.get(f(x-1, M)).get(f(y+1, M)),     zones.get(x).get(f(y+1,M)),          zones.get(f(x+1,M)).get(f(y+1,M))
+
             );
+
+
 
             (periodic ? nearZonesPeriodic : nearZonesNonPeriodic).forEach(nz -> {
-                addZoneNeighbours(particleZones, particleNeighbours, p, rc, L, M, nz, periodic);
+                addZoneNeighbours(nz, particleNeighbours, p, rc, L, M, periodic);
             });
         }
 
@@ -79,21 +90,11 @@ public class CIM {
 
         writer.write("ID,x,y,r,neighbours\n");
 
-        Particle chosen = neighbours.entrySet().iterator().next().getKey();
-
         for (Particle particle : particles) {
             writer.write(particle.getId()+","+particle.getX()+","+particle.getY()+","+particle.getR()+",\""+Arrays.deepToString(neighbours.get(particle).toArray())+"\"");
-//            if (neighbours.get(chosen).contains(particle)) {
-//                writer.write('g');
-//            } else if (particle.equals(chosen)) {
-//                writer.write('b');
-//            } else {
-//                writer.write('r');
-//            }
-            writer.write('\n');
-//            writer.write(particle.getId()+" 1 "+particle.getX()+" "+particle.getY()+" 0\n");
-        }
 
+            writer.write('\n');
+        }
 
         writer.close();
     }

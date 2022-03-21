@@ -1,7 +1,5 @@
 import java.io.*;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -23,7 +21,7 @@ public class Main {
         boolean periodicContours = json.get("periodicContours").toString().equals("true");
 
         JSONArray particlesJson = (JSONArray) json.get("particles");
-        Set<Particle> particles = new HashSet<>();
+        Set<Particle> particles = new TreeSet<>(Comparator.comparingInt(Particle::getId));
 
         int id = 0;
         for(Object object : particlesJson) {
