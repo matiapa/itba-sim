@@ -13,7 +13,7 @@ public class CIM {
         Particle p, float rc, int L, int M, int zone, boolean periodic
     ) {
         if(zone >=0 && zone < M*M) {
-            particleNeighbours.get(p).addAll(particleZones.get(zone).stream().parallel().filter(c -> !p.equals(c) && (periodic ? p.periodicDistanceTo(c, L) : p.distanceTo(c)) <= rc).collect(Collectors.toList()));
+            particleNeighbours.get(p).addAll(particleZones.get(zone).stream().parallel().filter(c -> !p.equals(c) && p.distanceTo(c, L, periodic) <= rc).collect(Collectors.toList()));
         }
     }
 

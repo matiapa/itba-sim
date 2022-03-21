@@ -9,38 +9,37 @@ public class Particle {
 
     public Particle(int id, float x, float y, float r) {
         this.id = id;
-        this.x = x;
-        this.y = y;
+        this.x = x; // 8.5  8.7
+        this.y = y; // 0.0  9.8
         this.r = r;
     }
 
-    public double distanceTo(Particle o) {
-        double dist = Math.hypot((getX() - o.getX()), (getY() - o.getY())) - (r + o.getR());
-        return dist > 0 ? dist : 0;
-    }
+    public double distanceTo(Particle o, int L, boolean usePeriodic) {
+        double distX = Math.abs(getX() - o.getX());
 
-    public double periodicDistanceTo(Particle o, int L) {
-        double normalDist = distanceTo(o);
+        if(usePeriodic) {
+            double pDistX = 0;
+            if(x < o.getX())
+                pDistX = x + L - o.getX();
+            else if(x > o.getX())
+                pDistX = o.getX() + L - x;
+            if(pDistX < distX)
+                distX = pDistX;
+        }
 
-        double periodicDistX, periodicDistY;
-        if(x < o.getX())
-            periodicDistX = x + L - o.getX();
-        else if(x > o.getX())
-            periodicDistX = o.getX() + L - x;
-        else
-            periodicDistX = 0;
+        double distY = Math.abs(getY() - o.getY());
 
-        if(y < o.getY())
-            periodicDistY = y + L - o.getY();
-        else if(y > o.getY())
-            periodicDistY = o.getY() + L - y;
-        else
-            periodicDistY = 0;
+        if(usePeriodic) {
+            double pDistY = 0;
+            if(y < o.getY())
+                pDistY = y + L - o.getY();
+            else if(y > o.getY())
+                pDistY = o.getY() + L - y;
+            if(pDistY < distX)
+                distX = pDistY;
+        }
 
-        double periodicDist = Math.hypot(periodicDistX, periodicDistY) - (r + o.getR());
-        periodicDist = periodicDist > 0 ? periodicDist : 0;
-
-        return Math.min(normalDist, periodicDist);
+        return Math.hypot(distX, distY) - (r + o.getR());
     }
 
     @Override

@@ -49,7 +49,7 @@ public class Statistic {
         PrintWriter writer = new PrintWriter("stats.csv", "UTF-8");
 
         writer.println("N M cimTime bfTime");
-        for(int N = 10; N < 100; N += 10) {
+        for(int N = 10; N <= 100; N += 10) {
             for(int M=2; M < L/rc; M++) {
                 String line = runExperiment(L, rc, r, N, M);
                 writer.println(line);
