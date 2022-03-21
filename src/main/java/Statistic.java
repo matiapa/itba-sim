@@ -46,10 +46,15 @@ public class Statistic {
         int rc = 1;
         float r = (float) 0.25;
 
-        PrintWriter writer = new PrintWriter("stats.csv", "UTF-8");
+        int minN = Integer.parseInt(args[0]);
+        int stepN = Integer.parseInt(args[1]);
+        int maxN = Integer.parseInt(args[2]);
+        String filename = args[3];
+
+        PrintWriter writer = new PrintWriter(filename, "UTF-8");
 
         writer.println("N M cimTime bfTime");
-        for(int N = 10; N <= 100; N += 10) {
+        for(int N = minN; N <= maxN; N += stepN) {
             for(int M=2; M < L/rc; M++) {
                 String line = runExperiment(L, rc, r, N, M);
                 writer.println(line);
