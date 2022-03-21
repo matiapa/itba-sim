@@ -9,16 +9,13 @@ public class Particle {
 
     public Particle(int id, float x, float y, float r) {
         this.id = id;
-        this.x = x; // 8.5  8.7
-        this.y = y; // 0.0  9.8
+        this.x = x;
+        this.y = y;
         this.r = r;
     }
 
     public double distanceTo(Particle o, int L, boolean usePeriodic) {
-        // X  0.06  0.44
-        // Y  9.92  1.30
-
-        double distX = Math.abs(getX() - o.getX()); // 0.38
+        double distX = Math.abs(x - o.getX());
 
         if(usePeriodic) {
             double pDistX = 0;
@@ -30,7 +27,7 @@ public class Particle {
                 distX = pDistX;
         }
 
-        double distY = Math.abs(getY() - o.getY()); // 1.38
+        double distY = Math.abs(y - o.getY());
 
         if(usePeriodic) {
             double pDistY = 0;

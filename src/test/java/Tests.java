@@ -48,7 +48,7 @@ public class Tests {
         assertEquals(expectedN5, n5);
     }
 
-    // L=6, M=3, rc=1
+    // L=6, M=3, rc=2
 
     // 0 X 1 X X 2    0 0 1 1 2 2
     // X X X X X X    0 0 1 1 2 2
@@ -57,7 +57,7 @@ public class Tests {
     // X X X X X X    6 6 7 7 8 8
     // X 6 7 X X 8    6 6 7 7 8 8
 
-    // Neighbours - 0: 2, 6, 8 - 2: 0, 8 - 4: 3, 5 - 6: 0 - 8: 0, 2
+    // Neighbours - 0: 1, 2, 6, 8 - 2: 0, 8 - 4: 1, 3, 5 - 6: 0, 1, 7, 8 - 8: 0, 2, 6, 7
 
     // R=0: 0,1,2,3,4,5,6,7 - R=1: 8
 
@@ -78,21 +78,21 @@ public class Tests {
         particles.add(new Particle(8, 5, 5, 1));
 
         Set<Particle> expectedN0 = new HashSet<>();
-        expectedN0.add(p(2)); expectedN0.add(p(6)); expectedN0.add(p(8));
+        expectedN0.add(p(1)); expectedN0.add(p(2)); expectedN0.add(p(6)); expectedN0.add(p(8));
 
         Set<Particle> expectedN2 = new HashSet<>();
         expectedN2.add(p(0)); expectedN2.add(p(8));
 
         Set<Particle> expectedN4 = new HashSet<>();
-        expectedN4.add(p(3)); expectedN4.add(p(5));
+        expectedN4.add(p(1)); expectedN4.add(p(3)); expectedN4.add(p(5));
 
         Set<Particle> expectedN6 = new HashSet<>();
-        expectedN6.add(p(0));
+        expectedN6.add(p(0)); expectedN6.add(p(1)); expectedN6.add(p(7)); expectedN6.add(p(8));
 
         Set<Particle> expectedN8 = new HashSet<>();
-        expectedN8.add(p(0)); expectedN8.add(p(2));
+        expectedN8.add(p(0)); expectedN8.add(p(2)); expectedN8.add(p(6)); expectedN8.add(p(7));
 
-        Map<Particle, Set<Particle>> neighbours = CIM.findNeighbours(particles, 1, 6, 3, true);
+        Map<Particle, Set<Particle>> neighbours = CIM.findNeighbours(particles, 2, 6, 3, true);
 
         Set<Particle> n0 = neighbours.get(p(0));
         Set<Particle> n2 = neighbours.get(p(2));
