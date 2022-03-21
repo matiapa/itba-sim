@@ -33,5 +33,6 @@ replay_pid*
 .idea/
 
 # Other
-stats.csv
+stats/*.csv
+output.csv
 .DS_Store
