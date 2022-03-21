@@ -15,7 +15,10 @@ public class Particle {
     }
 
     public double distanceTo(Particle o, int L, boolean usePeriodic) {
-        double distX = Math.abs(getX() - o.getX());
+        // X  0.06  0.44
+        // Y  9.92  1.30
+
+        double distX = Math.abs(getX() - o.getX()); // 0.38
 
         if(usePeriodic) {
             double pDistX = 0;
@@ -27,7 +30,7 @@ public class Particle {
                 distX = pDistX;
         }
 
-        double distY = Math.abs(getY() - o.getY());
+        double distY = Math.abs(getY() - o.getY()); // 1.38
 
         if(usePeriodic) {
             double pDistY = 0;
@@ -35,11 +38,13 @@ public class Particle {
                 pDistY = y + L - o.getY();
             else if(y > o.getY())
                 pDistY = o.getY() + L - y;
-            if(pDistY < distX)
-                distX = pDistY;
+            if(pDistY < distY)
+                distY = pDistY;
         }
 
-        return Math.hypot(distX, distY) - (r + o.getR());
+        double dist = Math.hypot(distX, distY) - (r + o.getR());
+
+        return Math.max(dist, 0);
     }
 
     @Override
