@@ -9,8 +9,8 @@ public class CIM {
     }
 
     static private void addZoneNeighbours(
-        ArrayList<Set<Particle>> particleZones, Map<Particle, Set<Particle>> particleNeighbours,
-        Particle p, float rc, int L, int M, int zone, boolean periodic
+            ArrayList<Set<Particle>> particleZones, Map<Particle, Set<Particle>> particleNeighbours,
+            Particle p, float rc, int L, int M, int zone, boolean periodic
     ) {
         if(zone >=0 && zone < M*M) {
             particleNeighbours.get(p).addAll(particleZones.get(zone).stream().parallel().filter(c -> !p.equals(c) && p.distanceTo(c, L, periodic) <= rc).collect(Collectors.toList()));

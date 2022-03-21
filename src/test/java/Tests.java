@@ -1,4 +1,3 @@
-
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -56,11 +55,11 @@ public class Tests {
     // X 3 4 5 X X    3 3 4 4 5 5
     // X X X X X X    3 3 4 4 5 5
     // X X X X X X    6 6 7 7 8 8
-    // 6 X 7 X X 8    6 6 7 7 8 8
+    // X 6 7 X X 8    6 6 7 7 8 8
 
-    // 0: 2, 6, 8 - 2: 0, 8 - 4: 3, 5 - 6: 0, 8 - 8: 0, 2, 6
+    // Neighbours - 0: 2, 6, 8 - 2: 0, 8 - 4: 3, 5 - 6: 0 - 8: 0, 2
 
-    // R=1: 8
+    // R=0: 0,1,2,3,4,5,6,7 - R=1: 8
 
     @Test
     void periodicTest() {
@@ -74,7 +73,7 @@ public class Tests {
         particles.add(new Particle(4, 2, 2, 0));
         particles.add(new Particle(5, 3, 2, 0));
 
-        particles.add(new Particle(6, 0, 5, 0));
+        particles.add(new Particle(6, 1, 5, 0));
         particles.add(new Particle(7, 2, 5, 0));
         particles.add(new Particle(8, 5, 5, 1));
 
@@ -88,10 +87,10 @@ public class Tests {
         expectedN4.add(p(3)); expectedN4.add(p(5));
 
         Set<Particle> expectedN6 = new HashSet<>();
-        expectedN6.add(p(0)); expectedN6.add(p(8));
+        expectedN6.add(p(0));
 
         Set<Particle> expectedN8 = new HashSet<>();
-        expectedN8.add(p(0)); expectedN8.add(p(2)); expectedN8.add(p(6));
+        expectedN8.add(p(0)); expectedN8.add(p(2));
 
         Map<Particle, Set<Particle>> neighbours = CIM.findNeighbours(particles, 1, 6, 3, true);
 
