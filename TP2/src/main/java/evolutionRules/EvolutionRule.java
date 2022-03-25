@@ -1,11 +1,11 @@
 package evolutionRules;
 
-import state.Cell;
+import cell.Cell;
 
 public interface EvolutionRule {
 
-    void apply(int x, int y, Cell[][] grid);
+    boolean apply(int t, int x, int y, Cell[][] grid);
 
-    void apply(int x, int y, int z, Cell[][][] grid);
+    boolean apply(int t, int x, int y, int z, Cell[][][] grid);
 
 }

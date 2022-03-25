@@ -1,9 +1,9 @@
-package state;
+package cell;
 
 public class Cell {
 
     private boolean alive;
-    private int bornIteration;
+    private Integer bornIteration;
 
     public Cell(boolean alive) {
         this.alive = alive;
@@ -18,17 +18,17 @@ public class Cell {
         this.alive = alive;
     }
 
-    public int getBornIteration() {
+    public Integer getBornIteration() {
         return bornIteration;
     }
 
-    public void setBornIteration(int bornIteration) {
+    public void setBornIteration(Integer bornIteration) {
         this.bornIteration = bornIteration;
     }
 
     @Override
     public String toString() {
-        return alive ? "1" : "0";
+        return String.format("%d %d", alive ? 1 : 0, bornIteration);
     }
 
 }

@@ -1,6 +1,6 @@
 import evolutionRules.EvolutionRule;
 import evolutionRules.StandardRule;
-import state.Cell;
+import cell.Cell;
 
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
@@ -12,36 +12,40 @@ public class Main {
 
     public static void main(String[] args) throws FileNotFoundException, UnsupportedEncodingException {
 
-        int L = Integer.parseInt(args[0]);
-        Cell[][] grid = new Cell[L][L];
+//        int L = Integer.parseInt(args[0]);
+//        Cell[][] grid = new Cell[L][L];
+
+        int L = 4;
+        Cell[][] grid = testGrid();
 
         EvolutionRule rule = new StandardRule();
 
         PrintWriter writer = new PrintWriter("output.csv", "UTF-8");
-        writer.println("t x y alive bornIteration");
 
-        boolean finished = false;
-        for(int t=0; !finished && t<MAX_ITER; t++) {
-            for(int i=0; i<L; i++) {
-                for(int j=0; j<L; j++) {
-                    Cell cell = grid[i][j];
+        boolean finalState = false;
+        for(int t=0; !finalState && t<MAX_ITER; t++) {
+            for(int x=0; x<L; x++) {
+                for(int y=0; y<L; y++) {
+                    Cell cell = grid[x][y];
 
-                    boolean wasAlive = cell.isAlive();
-                    rule.apply(i, j, grid);
-                    boolean isAlive = cell.isAlive();
+                    finalState = rule.apply(t, x, y, grid);
 
-                    if(!wasAlive && isAlive)
-                        cell.setBornIteration(t);
-
-                    finished = isAlive && (i == 0 || j == 0 || i == L-1 || j == L-1);
-
-                    writer.println(String.format("%d %d %d %d %d", t, i, j, isAlive ? 1 : 0, cell.getBornIteration()));
+                    writer.println(String.format("%d %d %d %s", t, x, y, cell));
                 }
             }
         }
 
         writer.close();
 
+    }
+    
+    private static Cell[][] testGrid() {
+        return new Cell[][]{
+            {new Cell(false), new Cell(false), new Cell(false), new Cell(false)},
+            {new Cell(false), new Cell(true), new Cell(true), new Cell(false)},
+            {new Cell(false), new Cell(true), new Cell(true), new Cell(false)},
+            {new Cell(false), new Cell(false), new Cell(false), new Cell(false)}
+        };
     }
 
 }
