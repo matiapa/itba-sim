@@ -32,9 +32,9 @@ public abstract class LifeGameRule implements EvolutionRule {
         for(int i = x - 1; i <= x + 1; i++) {
             for(int j = y - 1; j <= y + 1; j++) {
                 for(int k = z - 1; k <= z + 1; k++) {
-                    if (i < 0 || i >= grid.length || j < 0 || j >= grid.length || k < 0 || z >= grid.length)
+                    if (i < 0 || i >= grid.length || j < 0 || j >= grid.length || k < 0 || k >= grid.length)
                         continue;
-                    aliveNeighbours += grid[i][j][k].isAlive() && i != x && j != y && k != z ? 1 : 0;
+                    aliveNeighbours += grid[i][j][k].isAlive() && (i != x || j != y || k != z) ? 1 : 0;
                 }
             }
         }

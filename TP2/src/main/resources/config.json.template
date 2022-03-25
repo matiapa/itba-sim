@@ -1,0 +1,13 @@
+{
+  "grid": {
+    "size": 10,                                  # The size of the random grid must be specified
+    "type": "2D",                                # The type of grid to use, can be '2D' or '3D'
+    "aliveParticles": [[1,1],[1,2],[2,1],[2,2]], # If provided, grid will initialized as this
+    "random": {                                  # If no initial value is given, a random one will be generated
+      "aliveProportion": 0.05                    # The proportion of cells that will be alive, can be between 0 and 1
+    }
+  },
+  "evolutionRule": "B3/S23",                     # The evolution rule to use, can be 'B1/S12', 'B3/S23/D5', 'B3/S23', 'B36/S23'
+                                                 # for the meaning of notation checkout corresponding classes
+  "maxIterations": 5                             # The max number of iterations to simulate
+}
