@@ -1,12 +1,15 @@
 import evolutionRules.EvolutionRule;
-import evolutionRules.StandardRule;
+import evolutionRules.lifeGameRules.B3S23Rule;
 import cell.Cell;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 
-public class Main {
+
+
+public class Automata {
 
     static int MAX_ITER = 1;
 
@@ -18,7 +21,7 @@ public class Main {
         int L = 4;
         Cell[][] grid = testGrid();
 
-        EvolutionRule rule = new StandardRule();
+        EvolutionRule rule = new B3S23Rule();
 
         PrintWriter writer = new PrintWriter("output.csv", "UTF-8");
 
@@ -27,9 +30,7 @@ public class Main {
             for(int x=0; x<L; x++) {
                 for(int y=0; y<L; y++) {
                     Cell cell = grid[x][y];
-
                     finalState = rule.apply(t, x, y, grid);
-
                     writer.println(String.format("%d %d %d %s", t, x, y, cell));
                 }
             }
@@ -38,6 +39,8 @@ public class Main {
         writer.close();
 
     }
+
+
     
     private static Cell[][] testGrid() {
         return new Cell[][]{

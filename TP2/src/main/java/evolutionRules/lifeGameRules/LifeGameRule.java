@@ -1,8 +1,14 @@
-package evolutionRules;
+package evolutionRules.lifeGameRules;
 
 import cell.Cell;
+import evolutionRules.EvolutionRule;
 
-public class StandardRule implements EvolutionRule {
+// B3/S23 -> Standard ruleset.
+// B3/S23/D5 -> Standard ruleset with age limit.
+// B1/S12 -> Generates Sierpinski triangles.
+// B36/S23 -> Has frequent replicators.
+
+public abstract class LifeGameRule implements EvolutionRule {
 
     @Override
     public boolean apply(int t, int x, int y, Cell[][] grid) {
@@ -14,10 +20,10 @@ public class StandardRule implements EvolutionRule {
                 aliveNeighbours += grid[i][j].isAlive() && (i != x || j != y)  ? 1 : 0;
             }
         }
-        
+
         changeState(t, grid[x][y], aliveNeighbours);
 
-        return grid[x][y].isAlive() && (x == 0 || y == 0 || x == grid.length-1 || y == grid.length-1);
+        return isFinalState(x, y, grid);
     }
 
     @Override
@@ -35,18 +41,27 @@ public class StandardRule implements EvolutionRule {
 
         changeState(t, grid[x][y][z], aliveNeighbours);
 
-        return grid[x][y][z].isAlive() && (x == 0 || y == 0 || z == 0 || x == grid.length-1
-                || y == grid.length-1 || z == grid.length-1);
+        return isFinalState(x, y, z, grid);
     }
-    
+
     private void changeState(int t, Cell cell, int aliveNeighbours) {
-        if(cell.isAlive() && (aliveNeighbours < 2 || aliveNeighbours > 3)) {
-            cell.setAlive(false);
-            cell.setBornIteration(null);
-        } else if(!cell.isAlive() && aliveNeighbours == 3) {
-            cell.setAlive(true);
+        boolean wasAlive = cell.isAlive();
+        updateAliveProperty(t, cell, aliveNeighbours);
+        boolean isAlive = cell.isAlive();
+
+        if(!wasAlive && isAlive)
             cell.setBornIteration(t);
-        }
     }
+
+    private boolean isFinalState(int x, int y, Cell[][] grid) {
+        return grid[x][y].isAlive() && (x == 0 || y == 0 || x == grid.length-1 || y == grid.length-1);
+    }
+
+    private boolean isFinalState(int x, int y, int z, Cell[][][] grid) {
+        return grid[x][y][z].isAlive() && (x == 0 || y == 0 || z == 0 || x == grid.length-1
+            || y == grid.length-1 || z == grid.length-1);
+    }
+
+    protected abstract void updateAliveProperty(int t, Cell cell, int aliveNeighbours);
 
 }
