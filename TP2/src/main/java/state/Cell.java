@@ -1,11 +1,11 @@
 package state;
 
-public class State {
+public class Cell {
 
     private boolean alive;
     private int bornIteration;
 
-    public State(boolean alive) {
+    public Cell(boolean alive) {
         this.alive = alive;
         this.bornIteration = 0;
     }
@@ -30,4 +30,5 @@ public class State {
     public String toString() {
         return alive ? "1" : "0";
     }
+
 }

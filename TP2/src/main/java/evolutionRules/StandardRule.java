@@ -1,11 +1,11 @@
 package evolutionRules;
 
-import state.State;
+import state.Cell;
 
 public class StandardRule implements EvolutionRule {
 
     @Override
-    public void apply(int x, int y, State[][] grid) {
+    public void apply(int x, int y, Cell[][] grid) {
         int aliveNeighbours = 0;
         for(int i = x - 1; i <= x + 1; i++) {
             for(int j = y - 1; j <= y + 1; j++) {
@@ -19,7 +19,7 @@ public class StandardRule implements EvolutionRule {
     }
 
     @Override
-    public void apply(int x, int y, int z, State[][][] grid) {
+    public void apply(int x, int y, int z, Cell[][][] grid) {
         int aliveNeighbours = 0;
         for(int i = x - 1; i <= x + 1; i++) {
             for(int j = y - 1; j <= y + 1; j++) {
@@ -34,11 +34,11 @@ public class StandardRule implements EvolutionRule {
         changeState(grid[x][y][z], aliveNeighbours);
     }
     
-    private void changeState(State cellState, int aliveNeighbours) {
-        if(cellState.isAlive() && (aliveNeighbours < 2 || aliveNeighbours > 3)) {
-            cellState.setAlive(false);
-        } else if(!cellState.isAlive() && aliveNeighbours == 3) {
-            cellState.setAlive(true);
+    private void changeState(Cell cell, int aliveNeighbours) {
+        if(cell.isAlive() && (aliveNeighbours < 2 || aliveNeighbours > 3)) {
+            cell.setAlive(false);
+        } else if(!cell.isAlive() && aliveNeighbours == 3) {
+            cell.setAlive(true);
         }
     }
 
