@@ -21,15 +21,19 @@ public class Automata {
 
         writer.println("t x y ".concat(grid[0][0].stateHeader()));
 
-        boolean finalState = false; int t=0;
-        for(t=0; !finalState && t<maxIterations; t++) {
+        int t;
+        for(t=0; t<maxIterations; t++) {
+            Cell[][] newGrid = new Cell[L][L];
+
             for(int x=0; x<L; x++) {
                 for(int y=0; y<L; y++) {
-                    Cell cell = grid[x][y];
-                    finalState = rule.apply(t, x, y, grid);
-                    writer.println(String.format("%d %d %d %s", t, x, y, cell.stateString()));
+                    if(grid[x][y].isAlive())
+                        writer.println(String.format("%d %d %d %s", t, x, y, grid[x][y].stateString()));
+                    newGrid[x][y] = rule.evaluate(t, x, y, grid);
                 }
             }
+
+            grid = newGrid;
         }
 
         writer.close();
@@ -41,18 +45,18 @@ public class Automata {
         PrintWriter writer = new PrintWriter("output.csv", "UTF-8");
         writer.println("t x y z ".concat(grid[0][0][0].stateHeader()));
 
-        boolean finalState = false;
-        for(int t=0; !finalState && t<maxIterations; t++) {
-            for(int x=0; x<L; x++) {
-                for(int y=0; y<L; y++) {
-                    for(int z=0; z<L; z++) {
-                        Cell cell = grid[x][y][z];
-                        finalState = rule.apply(t, x, y, z, grid);
-                        writer.println(String.format("%d %d %d %d %s", t, x, y, z, cell.stateString()));
-                    }
-                }
-            }
-        }
+//        boolean finalState = false;
+//        for(int t=0; !finalState && t<maxIterations; t++) {
+//            for(int x=0; x<L; x++) {
+//                for(int y=0; y<L; y++) {
+//                    for(int z=0; z<L; z++) {
+//                        Cell cell = grid[x][y][z];
+//                        finalState = rule.evaluate(t, x, y, z, grid);
+//                        writer.println(String.format("%d %d %d %d %s", t, x, y, z, cell.stateString()));
+//                    }
+//                }
+//            }
+//        }
 
         writer.close();
     }

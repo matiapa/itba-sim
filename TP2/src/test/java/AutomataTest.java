@@ -7,19 +7,28 @@ import java.util.*;
 
 public class AutomataTest {
 
+    //   0 1 2 3 4        0 1 2 3 4
+    // 0                0
+    // 1     x          1
+    // 2     x          2   x x x
+    // 3     x          3
+    // 4                4
+
     @Test
     public void test_B3S23_2D() {
         int L = 10;
-        int maxIterations = 15;
+        int maxIterations = 16;
 
         Integer[][][] initials = new Integer[][][]{
             {{1,1}, {1,2}, {2,1}, {2,2}},           // Static block,
             {{0,4}, {1,5}, {2,3}, {2,4}, {2,5}},    // Glider
+            {{1,2},{2,2},{3,2}}                     // Blinker
         };
 
         Integer[][][] expectedFinals = new Integer[][][]{
             {{1,1}, {1,2}, {2,1}, {2,2}},           // Static block,
             {{4,7}, {5,8}, {5,9}, {6,4}, {6,5}},    // Glider
+            {{1,2},{2,2},{3,2}}                 // Glider
         };
 
         for(int i=0; i<initials.length; i++) {

@@ -11,7 +11,7 @@ import evolutionRules.EvolutionRule;
 public abstract class LifeGameRule implements EvolutionRule {
 
     @Override
-    public boolean apply(int t, int x, int y, Cell[][] grid) {
+    public Cell evaluate(int t, int x, int y, Cell[][] grid) {
         int aliveNeighbours = 0;
         for(int i = x - 1; i <= x + 1; i++) {
             for(int j = y - 1; j <= y + 1; j++) {
@@ -21,13 +21,11 @@ public abstract class LifeGameRule implements EvolutionRule {
             }
         }
 
-        changeState(t, grid[x][y], aliveNeighbours);
-
-        return isFinalState(x, y, grid);
+        return getNewState(t, grid[x][y], aliveNeighbours);
     }
 
     @Override
-    public boolean apply(int t, int x, int y, int z, Cell[][][] grid) {
+    public Cell evaluate(int t, int x, int y, int z, Cell[][][] grid) {
         int aliveNeighbours = 0;
         for(int i = x - 1; i <= x + 1; i++) {
             for(int j = y - 1; j <= y + 1; j++) {
@@ -39,18 +37,17 @@ public abstract class LifeGameRule implements EvolutionRule {
             }
         }
 
-        changeState(t, grid[x][y][z], aliveNeighbours);
-
-        return isFinalState(x, y, z, grid);
+        return getNewState(t, grid[x][y][z], aliveNeighbours);
     }
 
-    private void changeState(int t, Cell cell, int aliveNeighbours) {
-        boolean wasAlive = cell.isAlive();
-        updateAliveProperty(t, cell, aliveNeighbours);
-        boolean isAlive = cell.isAlive();
+    private Cell getNewState(int t, Cell cell, int aliveNeighbours) {
+        boolean cellLives = cellLives(t, cell, aliveNeighbours);
+        Cell newCell = new Cell(cellLives);
 
-        if(!wasAlive && isAlive)
-            cell.setBornIteration(t);
+        if(!cell.isAlive() && newCell.isAlive())
+            newCell.setBornIteration(t);
+
+        return newCell;
     }
 
     private boolean isFinalState(int x, int y, Cell[][] grid) {
@@ -62,6 +59,6 @@ public abstract class LifeGameRule implements EvolutionRule {
             || y == grid.length-1 || z == grid.length-1);
     }
 
-    protected abstract void updateAliveProperty(int t, Cell cell, int aliveNeighbours);
+    protected abstract boolean cellLives(int t, Cell cell, int aliveNeighbours);
 
 }
