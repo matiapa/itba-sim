@@ -3,32 +3,27 @@ import evolutionRules.lifeGameRules.B3S23Rule;
 import org.json.JSONArray;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
 import java.util.*;
 
 public class AutomataTest {
 
-    //   0 1 2 3 4        0 1 2 3 4
-    // 0                0
-    // 1     x          1
-    // 2     x          2   x x x
-    // 3     x          3
-    // 4                4
-
     @Test
     public void test_B3S23_2D() {
         int L = 10;
-        int maxIterations = 16;
+        int maxT = 15;
 
         Integer[][][] initials = new Integer[][][]{
             {{1,1}, {1,2}, {2,1}, {2,2}},           // Static block,
-            {{0,4}, {1,5}, {2,3}, {2,4}, {2,5}},    // Glider
-            {{1,2},{2,2},{3,2}}                     // Blinker
+            {{1,2},{2,2},{3,2}},                    // Blinker
+            {{1,4}, {2,5}, {3,3}, {3,4}, {3,5}}     // Glider
         };
 
         Integer[][][] expectedFinals = new Integer[][][]{
             {{1,1}, {1,2}, {2,1}, {2,2}},           // Static block,
-            {{4,7}, {5,8}, {5,9}, {6,4}, {6,5}},    // Glider
-            {{1,2},{2,2},{3,2}}                 // Glider
+            {{2,1}, {2,2}, {2,3}},                  // Blinker
+            {{5,7}, {6,8}, {6,9}, {7,7}, {7,8}}     // Glider
         };
 
         for(int i=0; i<initials.length; i++) {
@@ -38,11 +33,11 @@ public class AutomataTest {
             System.out.printf("Expecting: %s%n", Arrays.deepToString(expectedFinal.toArray()));
 
             Cell[][] grid = Main.parsedGrid2D(L, new JSONArray(initials[i]), false);
-            int iterations = Automata.run(grid, new B3S23Rule(), maxIterations);
+            Cell[][] finalGrid = Automata.run(grid, new B3S23Rule(), maxT);
+            assertNotNull(finalGrid);
 
-            List<Integer[]> finals = getAlivePoints(grid);
+            List<Integer[]> finals = getAlivePoints(finalGrid);
             System.out.printf("Obtained:  %s%n", Arrays.deepToString(finals.toArray()));
-            System.out.printf("Iterations: %d%n", iterations);
 
             assertEquals(finals.size(), expectedFinal.size());
             for(int j=0; j<finals.size(); j++) {
@@ -52,7 +47,6 @@ public class AutomataTest {
             System.out.printf("Configuration %d passed!%n", i);
             System.out.println("---------------------------");
         }
-
     }
 
     private List<Integer[]> getAlivePoints(Cell[][] grid) {

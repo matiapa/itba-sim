@@ -3,6 +3,7 @@ from matplotlib import animation
 from matplotlib.colors import ListedColormap
 import numpy as np
 import pandas as pd
+import copy
 
 df = pd.read_csv('output.csv')
 
@@ -36,6 +37,8 @@ def conway_step(frame):
             new_grid[int(row[1]), int(row[2])] = int(row[3])
         grid = new_grid
     img_plot.set_data(new_grid)
+    plt.savefig(f'out/{iteration}.png')
+
     return img_plot,
 
 def conway(random=True, size=8):
@@ -48,8 +51,8 @@ def conway(random=True, size=8):
     ax.set_yticks([])
     ani = animation.FuncAnimation(fig, frames=100, func=conway_step, interval=500)
     plt.tight_layout()
-    ani.save('testconway.gif')
+    ani.save('out/testconway.gif')
     plt.show()
     return ani
 
-conway(size=8)
+conway(size=10)
