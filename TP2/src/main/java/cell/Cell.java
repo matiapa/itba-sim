@@ -26,10 +26,10 @@ public class Cell {
         this.bornIteration = bornIteration;
     }
 
-    public String stateHeader() { return "a b"; }
+    public String stateHeader() { return "a,b"; }
 
     public String stateString() {
-        return String.format("%d %d", alive ? 1 : 0, bornIteration);
+        return String.format("%d,%d", alive ? 1 : 0, bornIteration);
     }
 
     @Override

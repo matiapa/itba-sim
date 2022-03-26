@@ -7,10 +7,8 @@ import cell.Cell;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONTokener;
-
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Objects;
 
 
 public class Main {
@@ -48,29 +46,44 @@ public class Main {
         String type = grid.getString("type");
         int L = grid.getInt("size");
 
-        if(grid.has("aliveParticles")) {
-            JSONArray array = grid.getJSONArray("aliveParticles");
+        if (grid.has("method")) {
+            String method = grid.getString("method");
 
-            if(type.equals("2D"))
-                Automata.run(parsedGrid2D(L, array), rule, maxIterations);
+            JSONArray array = null;
+            if (method.equals("array") && grid.has("particles") && type.equals("2D")) {
+                array = grid.getJSONArray("particles");
+            } else if (method.equals("coordinates") && grid.has("aliveParticles")) {
+                array = grid.getJSONArray("aliveParticles");
+            } else {
+                throw new RuntimeException("Invalid parameters");
+            }
+
+            if (type.equals("2D"))
+                Automata.run(parsedGrid2D(L, array, method.equals("array")), rule, maxIterations);
             else
                 Automata.run(parsedGrid3D(L, array), rule, maxIterations);
         } else {
             int p = grid.getInt("aliveProportion");
 
-            if(type.equals("2D"))
+            if (type.equals("2D"))
                 Automata.run(randomGrid2D(L, p), rule, maxIterations);
             else
                 Automata.run(randomGrid3D(L, p), rule, maxIterations);
         }
     }
 
-    public static Cell[][] parsedGrid2D(int L, JSONArray points) {
+    public static Cell[][] parsedGrid2D(int L, JSONArray points, boolean isArray) {
         Cell[][] grid = new Cell[L][L];
 
         for(int i=0; i<points.length(); i++) {
             JSONArray point = points.getJSONArray(i);
-            grid[point.getInt(0)][point.getInt(1)] = new Cell(true);
+            if (isArray) {
+                for (int j = 0; j < point.length(); j++) {
+                    grid[i][j] = new Cell(point.getInt(j) == 1);
+                }
+            } else {
+                grid[point.getInt(0)][point.getInt(1)] = new Cell(true);
+            }
         }
 
         for(int x=0; x<L; x++) {
@@ -91,10 +104,10 @@ public class Main {
             grid[point.getInt(0)][point.getInt(1)][point.getInt(2)] = new Cell(true);
         }
 
-        for(int x=0; x<L; x++) {
-            for(int y=0; y<L; y++) {
-                for(int z=0; z<L; z++) {
-                    if(grid[x][y][z] == null)
+        for (int x=0; x<L; x++) {
+            for (int y=0; y < L; y++) {
+                for (int z=0; z < L; z++) {
+                    if (grid[x][y][z] == null)
                         grid[x][y][z] = new Cell(false);
                 }
             }

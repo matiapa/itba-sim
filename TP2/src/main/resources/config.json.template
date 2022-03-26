@@ -1,5 +1,6 @@
 {
   "grid": {
+    "method": "coordinates"                      # The method used to pass the initial display
     "size": 10,                                  # The size of the random grid must be specified
     "type": "2D",                                # The type of grid to use, can be '2D' or '3D'
     "aliveParticles": [[1,1],[1,2],[2,1],[2,2]], # If provided, grid will initialized as this

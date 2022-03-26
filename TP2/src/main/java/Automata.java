@@ -5,6 +5,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
 
 public class Automata {
 
@@ -19,7 +20,7 @@ public class Automata {
             return 0;
         }
 
-        writer.println("t x y ".concat(grid[0][0].stateHeader()));
+        writer.println("t,x,y,".concat(grid[0][0].stateHeader()));
 
         boolean finalState = false; int t=0;
         for(t=0; !finalState && t<maxIterations; t++) {
@@ -27,10 +28,13 @@ public class Automata {
                 for(int y=0; y<L; y++) {
                     Cell cell = grid[x][y];
                     finalState = rule.apply(t, x, y, grid);
-                    writer.println(String.format("%d %d %d %s", t, x, y, cell.stateString()));
+                    writer.println(String.format("%d,%d,%d,%s", t, x, y, cell.stateString()));
                 }
             }
         }
+
+        if (finalState)
+            System.out.println("Reached final state");
 
         writer.close();
         return t;
@@ -39,7 +43,7 @@ public class Automata {
     public static void run(Cell[][][] grid, EvolutionRule rule, int maxIterations) throws FileNotFoundException, UnsupportedEncodingException {
         int L = grid.length;
         PrintWriter writer = new PrintWriter("output.csv", "UTF-8");
-        writer.println("t x y z ".concat(grid[0][0][0].stateHeader()));
+        writer.println("t,x,y,z,".concat(grid[0][0][0].stateHeader()));
 
         boolean finalState = false;
         for(int t=0; !finalState && t<maxIterations; t++) {
@@ -48,7 +52,7 @@ public class Automata {
                     for(int z=0; z<L; z++) {
                         Cell cell = grid[x][y][z];
                         finalState = rule.apply(t, x, y, z, grid);
-                        writer.println(String.format("%d %d %d %d %s", t, x, y, z, cell.stateString()));
+                        writer.println(String.format("%d,%d,%d,%d,%s", t, x, y, z, cell.stateString()));
                     }
                 }
             }

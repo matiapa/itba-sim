@@ -28,7 +28,7 @@ public class AutomataTest {
             List<Integer[]> expectedFinal = Arrays.asList(expectedFinals[i]);
             System.out.printf("Expecting: %s%n", Arrays.deepToString(expectedFinal.toArray()));
 
-            Cell[][] grid = Main.parsedGrid2D(L, new JSONArray(initials[i]));
+            Cell[][] grid = Main.parsedGrid2D(L, new JSONArray(initials[i]), false);
             int iterations = Automata.run(grid, new B3S23Rule(), maxIterations);
 
             List<Integer[]> finals = getAlivePoints(grid);
