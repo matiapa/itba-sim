@@ -9,6 +9,8 @@ import org.json.JSONObject;
 import org.json.JSONTokener;
 
 import java.io.*;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 
 public class Main {
@@ -63,7 +65,7 @@ public class Main {
         }
     }
 
-    private static Cell[][] parsedGrid2D(int L, JSONArray points) {
+    public static Cell[][] parsedGrid2D(int L, JSONArray points) {
         Cell[][] grid = new Cell[L][L];
 
         for(int i=0; i<points.length(); i++) {
@@ -81,7 +83,7 @@ public class Main {
         return grid;
     }
 
-    private static Cell[][][] parsedGrid3D(int L, JSONArray points) {
+    public static Cell[][][] parsedGrid3D(int L, JSONArray points) {
         Cell[][][] grid = new Cell[L][L][L];
 
         for(int i=0; i<points.length(); i++) {
