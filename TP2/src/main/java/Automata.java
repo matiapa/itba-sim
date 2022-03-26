@@ -5,6 +5,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
 
 public class Automata {
 
@@ -19,7 +20,7 @@ public class Automata {
             return 0;
         }
 
-        writer.println("t x y ".concat(grid[0][0].stateHeader()));
+        writer.println("t,x,y,".concat(grid[0][0].stateHeader()));
 
         int t;
         for(t=0; t<maxIterations; t++) {
@@ -28,7 +29,7 @@ public class Automata {
             for(int x=0; x<L; x++) {
                 for(int y=0; y<L; y++) {
                     if(grid[x][y].isAlive())
-                        writer.println(String.format("%d %d %d %s", t, x, y, grid[x][y].stateString()));
+                        writer.println(String.format("%d,%d,%d,%s", t, x, y, grid[x][y].stateString()));
                     newGrid[x][y] = rule.evaluate(t, x, y, grid);
                 }
             }
@@ -43,7 +44,7 @@ public class Automata {
     public static void run(Cell[][][] grid, EvolutionRule rule, int maxIterations) throws FileNotFoundException, UnsupportedEncodingException {
         int L = grid.length;
         PrintWriter writer = new PrintWriter("output.csv", "UTF-8");
-        writer.println("t x y z ".concat(grid[0][0][0].stateHeader()));
+        writer.println("t,x,y,z,".concat(grid[0][0][0].stateHeader()));
 
 //        boolean finalState = false;
 //        for(int t=0; !finalState && t<maxIterations; t++) {

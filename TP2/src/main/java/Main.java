@@ -7,8 +7,8 @@ import cell.Cell;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONTokener;
-
 import java.io.*;
+
 
 public class Main {
 
@@ -42,32 +42,60 @@ public class Main {
 
         JSONObject grid = (JSONObject) json.get("grid");
 
+        String method = grid.getString("method");
         String type = grid.getString("type");
         int L = grid.getInt("size");
 
-        if(grid.has("aliveParticles")) {
-            JSONArray array = grid.getJSONArray("aliveParticles");
+        Cell[][] grid2D = null;
+        Cell[][][] grid3D = null;
 
-            if(type.equals("2D"))
-                Automata.run(parsedGrid2D(L, array), rule, maxIterations);
-            else
-                Automata.run(parsedGrid3D(L, array), rule, maxIterations);
-        } else {
-            int p = grid.getInt("aliveProportion");
+        switch (method) {
+            case "random":
+                int p = grid.getJSONObject("random").getInt("aliveProportion");
 
-            if(type.equals("2D"))
-                Automata.run(randomGrid2D(L, p), rule, maxIterations);
-            else
-                Automata.run(randomGrid3D(L, p), rule, maxIterations);
+                if (type.equals("2D"))
+                    grid2D = randomGrid2D(L, p);
+                else
+                    grid3D = randomGrid3D(L, p);
+                break;
+            case "array": {
+                JSONArray array = grid.getJSONArray("particles");
+
+                if (type.equals("2D"))
+                    grid2D = parsedGrid2D(L, array, true);
+                break;
+            }
+            case "alive_coordinates": {
+                JSONArray array = grid.getJSONArray("particles");
+
+                if (type.equals("2D"))
+                    grid2D = parsedGrid2D(L, array, false);
+                else
+                    grid3D = parsedGrid3D(L, array);
+                break;
+            }
+            default:
+                throw new RuntimeException("Invalid parameters");
         }
+
+        if (grid2D != null)
+            Automata.run(grid2D, rule, maxIterations);
+        else if(grid3D != null)
+            Automata.run(grid3D, rule, maxIterations);
     }
 
-    public static Cell[][] parsedGrid2D(int L, JSONArray points) {
+    public static Cell[][] parsedGrid2D(int L, JSONArray points, boolean isArray) {
         Cell[][] grid = new Cell[L][L];
 
         for(int i=0; i<points.length(); i++) {
             JSONArray point = points.getJSONArray(i);
-            grid[point.getInt(0)][point.getInt(1)] = new Cell(true);
+            if (isArray) {
+                for (int j = 0; j < point.length(); j++) {
+                    grid[i][j] = new Cell(point.getInt(j) == 1);
+                }
+            } else {
+                grid[point.getInt(0)][point.getInt(1)] = new Cell(true);
+            }
         }
 
         for(int x=0; x<L; x++) {
@@ -88,10 +116,10 @@ public class Main {
             grid[point.getInt(0)][point.getInt(1)][point.getInt(2)] = new Cell(true);
         }
 
-        for(int x=0; x<L; x++) {
-            for(int y=0; y<L; y++) {
-                for(int z=0; z<L; z++) {
-                    if(grid[x][y][z] == null)
+        for (int x=0; x<L; x++) {
+            for (int y=0; y < L; y++) {
+                for (int z=0; z < L; z++) {
+                    if (grid[x][y][z] == null)
                         grid[x][y][z] = new Cell(false);
                 }
             }
