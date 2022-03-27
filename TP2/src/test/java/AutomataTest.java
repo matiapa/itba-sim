@@ -49,6 +49,42 @@ public class AutomataTest {
         }
     }
 
+    @Test
+    public void test_B3S23_3D() {
+        int L = 10;
+        int maxT = 15;
+
+        Integer[][][] initials = new Integer[][][]{
+                {{1,2,4},{2,2,4},{3,2,4}},                    // Blinker
+        };
+
+        Integer[][][] expectedFinals = new Integer[][][]{
+                {{2,1,4}, {2,2,4}, {2,3,4}},                  // Blinker
+        };
+
+        for(int i=0; i<initials.length; i++) {
+            System.out.printf("Testing configuration %d%n", i);
+
+            List<Integer[]> expectedFinal = Arrays.asList(expectedFinals[i]);
+            System.out.printf("Expecting: %s%n", Arrays.deepToString(expectedFinal.toArray()));
+
+            Cell[][] grid = Main.parsedGrid2D(L, new JSONArray(initials[i]), false);
+            Cell[][] finalGrid = Automata.run(grid, new B3S23Rule(), maxT);
+            assertNotNull(finalGrid);
+
+            List<Integer[]> finals = getAlivePoints(finalGrid);
+            System.out.printf("Obtained:  %s%n", Arrays.deepToString(finals.toArray()));
+
+            assertEquals(finals.size(), expectedFinal.size());
+            for(int j=0; j<finals.size(); j++) {
+                assertEquals(finals.get(j)[0], expectedFinal.get(j)[0]);
+                assertEquals(finals.get(j)[1], expectedFinal.get(j)[1]);
+            }
+            System.out.printf("Configuration %d passed!%n", i);
+            System.out.println("---------------------------");
+        }
+    }
+
     private List<Integer[]> getAlivePoints(Cell[][] grid) {
         List<Integer[]> points = new ArrayList<>();
 

@@ -22,7 +22,7 @@ public class Automata {
 
         writer.println("t,x,y,".concat(grid[0][0].stateHeader()));
 
-        Cell[][] newGrid = null;
+        Cell[][] newGrid;
         for(int t=0; t<=maxT; t++) {
             newGrid = new Cell[L][L];
 
@@ -42,13 +42,13 @@ public class Automata {
         return grid;
     }
 
-    public static Cell[][][] run(Cell[][][] grid, EvolutionRule rule, int maxIterations) throws FileNotFoundException, UnsupportedEncodingException {
+    public static Cell[][][] run(Cell[][][] grid, EvolutionRule rule, int maxT) throws FileNotFoundException, UnsupportedEncodingException {
         int L = grid.length;
         PrintWriter writer = new PrintWriter("output.csv", "UTF-8");
         writer.println("t,x,y,z,".concat(grid[0][0][0].stateHeader()));
 
-        Cell[][][] newGrid = null;
-        for(int t=0; t<maxIterations; t++) {
+        Cell[][][] newGrid;
+        for(int t=0; t<=maxT; t++) {
             newGrid = new Cell[L][L][L];
 
             for(int x=0; x<L; x++) {
@@ -61,11 +61,12 @@ public class Automata {
                 }
             }
 
-            grid = newGrid;
+            if(t != maxT)
+                grid = newGrid;
         }
 
         writer.close();
-        return newGrid;
+        return grid;
     }
 
 }
