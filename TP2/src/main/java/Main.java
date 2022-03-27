@@ -4,10 +4,15 @@ import evolutionRules.lifeGameRules.B36S23Rule;
 import evolutionRules.lifeGameRules.B3S23D5Rule;
 import evolutionRules.lifeGameRules.B3S23Rule;
 import cell.Cell;
+import points.Point2D;
+import points.Point3D;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 import java.io.*;
+import java.util.HashSet;
+import java.util.Random;
+import java.util.Set;
 
 
 public class Main {
@@ -82,6 +87,35 @@ public class Main {
             Automata.run(grid2D, rule, maxIterations);
         else if(grid3D != null)
             Automata.run(grid3D, rule, maxIterations);
+
+        // Generate random grids using Normal Distribution
+
+        Cell[][] randomGrid = randomGrid2D(6, 0.4);
+//        int count=0;
+//        for(int i=0; i<6; i++){
+//            for(int j=0; j<6; j++){
+//               if(randomGrid[i][j].isAlive()){
+//                   count++;
+//               }
+//            }
+//        }
+//
+//        System.out.println(count);
+
+        Cell[][][] randomGrid2 = randomGrid3D(6, 0.4);
+//        int count2=0;
+//
+//        for(int i=0; i<6; i++){
+//            for(int j=0; j<6; j++){
+//                for(int k=0; k<6; k++){
+//                    if(randomGrid2[i][j][k].isAlive()){
+//                        count2++;
+//                    }
+//                }
+//            }
+//        }
+//
+//        System.out.println(count2);
     }
 
     public static Cell[][] parsedGrid2D(int L, JSONArray points, boolean isArray) {
@@ -128,12 +162,69 @@ public class Main {
         return grid;
     }
 
-    private static Cell[][] randomGrid2D(int L, int p) {
-        throw new RuntimeException();
+    private static Cell[][] randomGrid2D(int L, double p) {
+        double N = Math.round(p * Math.pow(L, 2));
+        double u = L/2;
+        double sd = L/4;
+        Random r = new Random();
+        Set<Point2D> aliveCellsCoordinates = new HashSet<>();
+        int x, y;
+        for(int i=0; i<N; i++){
+            do{
+                x = (int) Math.round(r.nextGaussian() * sd + u);
+                y = (int) Math.round(r.nextGaussian() * sd + u);
+            } while(aliveCellsCoordinates.contains(new Point2D(x, y)));
+            aliveCellsCoordinates.add(new Point2D(x, y));
+        }
+
+//        System.out.println(aliveCellsCoordinates);
+
+        Cell[][] randomGrid2D = new Cell[L][L];
+        for(int row=0; row < L; row++){
+            for(int col=0; col<L; col++){
+                if(aliveCellsCoordinates.contains(new Point2D(row, col))){
+                    randomGrid2D[row][col] = new Cell(true);
+                } else {
+                    randomGrid2D[row][col] = new Cell(false);
+                }
+            }
+        }
+
+        return randomGrid2D;
     }
 
-    private static Cell[][][] randomGrid3D(int L, int p) {
-        throw new RuntimeException();
+    private static Cell[][][] randomGrid3D(int L, double p) {
+        double N = Math.round(p * Math.pow(L, 2));
+        double u = L/2;
+        double sd = L/4;
+        Random r = new Random();
+        Set<Point3D> aliveCellsCoordinates = new HashSet<>();
+        int x, y, z;
+        for(int i=0; i<N; i++){
+            do{
+                x = (int) Math.round(r.nextGaussian() * sd + u);
+                y = (int) Math.round(r.nextGaussian() * sd + u);
+                z = (int) Math.round(r.nextGaussian() * sd + u);
+            } while(aliveCellsCoordinates.contains(new Point3D(x, y, z)));
+            aliveCellsCoordinates.add(new Point3D(x, y, z));
+        }
+
+//        System.out.println(aliveCellsCoordinates);
+
+        Cell[][][] randomGrid3D = new Cell[L][L][L];
+        for(int row=0; row < L; row++){
+            for(int col=0; col<L; col++){
+                for(int depth=0; depth<L; depth++){
+                    if(aliveCellsCoordinates.contains(new Point3D(row, col, depth))){
+                        randomGrid3D[row][col][depth] = new Cell(true);
+                    } else {
+                        randomGrid3D[row][col][depth] = new Cell(false);
+                    }
+                }
+            }
+        }
+
+        return randomGrid3D;
     }
 
 }
