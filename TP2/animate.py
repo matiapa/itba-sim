@@ -1,12 +1,13 @@
+import os
+import sys
+import numpy as np
+import pandas as pd
 import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib import animation
 from matplotlib.colors import ListedColormap
-import numpy as np
-import pandas as pd
 from dotenv import load_dotenv
-import os
-import sys
+from tqdm import tqdm
 
 load_dotenv()
 
@@ -24,15 +25,17 @@ def create_grid_2D(size, iteration):
     return grid
 
 def animate_step_2D(frame):
-    global grid_size, img_plot
+    global grid_size, img_plot, load_iter
 
     if frame > 0:
         new_grid = create_grid_2D(grid_size, frame)    
         img_plot.set_data(new_grid)
 
-    plt.savefig(f'out/{frame}.png')
-
-    return img_plot,
+    try:
+        load_iter.__next__()
+    except:
+        pass
+    # plt.savefig(f'out/{frame}.png')
 
 def plot_2D(size, animate=False):
     global grid_size, img_plot
@@ -71,7 +74,7 @@ def create_grid_3D(size, iteration):
     return grid
 
 def animate_step_3D(frame):
-    global grid_size, ax
+    global grid_size, ax, load_iter
 
     if frame > 0:
         filled = create_grid_3D(grid_size, frame)
@@ -82,7 +85,11 @@ def animate_step_3D(frame):
         ax.set_zlabel("z")
         ax.voxels(filled, edgecolors='gray', shade=False)
 
-    plt.savefig(f'out/{frame}.png')
+    try:
+        load_iter.__next__()
+    except:
+        pass
+    # plt.savefig(f'out/{frame}.png')
 
 def plot_3D(size, animate=False):
     global grid_size, img_plot, ax
@@ -115,6 +122,8 @@ df.set_index(['t'])
 
 grid_size = 100
 end_t = max(df['t'])
+
+load_iter = tqdm(range(end_t)).__iter__()
 
 if sys.argv[1] == 'animate':
     animate = True
