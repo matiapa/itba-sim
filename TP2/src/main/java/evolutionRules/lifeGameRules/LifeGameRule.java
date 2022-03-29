@@ -4,7 +4,6 @@ import cell.Cell;
 import evolutionRules.EvolutionRule;
 
 // B3/S23 -> Standard ruleset.
-// B3/S23/D5 -> Standard ruleset with age limit.
 // B1/S12 -> Generates Sierpinski triangles.
 // B36/S23 -> Has frequent replicators.
 

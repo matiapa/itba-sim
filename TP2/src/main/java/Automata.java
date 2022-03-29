@@ -11,15 +11,14 @@ public class Automata {
 
     public static Cell[][] run(Cell[][] grid, EvolutionRule rule, int maxT) {
         int L = grid.length;
-        PrintWriter writer;
 
+        PrintWriter writer;
         try {
             writer = new PrintWriter("output.csv", "UTF-8");
         } catch (IOException e) {
             System.out.println("Couldn't create output file 'output.csv'");
             return null;
         }
-
         writer.println("t,x,y,".concat(grid[0][0].stateHeader()));
 
         Cell[][] newGrid;
@@ -42,9 +41,16 @@ public class Automata {
         return grid;
     }
 
-    public static Cell[][][] run(Cell[][][] grid, EvolutionRule rule, int maxT) throws FileNotFoundException, UnsupportedEncodingException {
+    public static Cell[][][] run(Cell[][][] grid, EvolutionRule rule, int maxT) {
         int L = grid.length;
-        PrintWriter writer = new PrintWriter("output.csv", "UTF-8");
+
+        PrintWriter writer;
+        try {
+            writer = new PrintWriter("output.csv", "UTF-8");
+        } catch (IOException e) {
+            System.out.println("Couldn't create output file 'output.csv'");
+            return null;
+        }
         writer.println("t,x,y,z,".concat(grid[0][0][0].stateHeader()));
 
         Cell[][][] newGrid;
@@ -55,7 +61,7 @@ public class Automata {
                 for(int y=0; y<L; y++) {
                     for(int z=0; z<L; z++) {
                         if(grid[x][y][z].isAlive())
-                            writer.println(String.format("%d %d %d %d %s", t, x, y, z, grid[x][y][z].stateString()));
+                            writer.println(String.format("%d,%d,%d,%d,%s", t, x, y, z, grid[x][y][z].stateString()));
                         newGrid[x][y][z] = rule.evaluate(t, x, y, z, grid);
                     }
                 }

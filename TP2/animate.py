@@ -1,8 +1,15 @@
+import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib import animation
 from matplotlib.colors import ListedColormap
 import numpy as np
 import pandas as pd
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+matplotlib.rcParams['animation.ffmpeg_path'] = os.getenv('ffmpeg_path')
 
 # ------------------------------------ 2D ANIMATION ------------------------------------
 
@@ -21,7 +28,8 @@ def animate_step_2D(frame):
     if frame > 0:
         new_grid = create_grid_2D(grid_size, frame)    
         img_plot.set_data(new_grid)
-        # plt.savefig(f'out/{frame}.png')
+
+    plt.savefig(f'out/{frame}.png')
 
     return img_plot,
 
@@ -35,7 +43,7 @@ def animate_2D(size):
     # Si, los ejes van al revés
     ax.set_xticks(np.arange(-.5, 10, 1), minor=True)
     ax.set_yticks(np.arange(-.5, 10, 1), minor=True)
-    ax.grid(which='minor', color='grey', linestyle='-', linewidth=2)
+    # ax.grid(which='minor', color='grey', linestyle='-', linewidth=2)
 
     plt.tight_layout()
 
@@ -43,8 +51,9 @@ def animate_2D(size):
     grid = create_grid_2D(size, 0)
     img_plot = ax.imshow(grid, interpolation='nearest', cmap=ListedColormap(['black', 'white']))
 
-    ani = animation.FuncAnimation(fig, frames=20, func=animate_step_2D, interval=1000)
-    ani.save('out/animation_2D.gif')
+    anim = animation.FuncAnimation(fig, frames=100, func=animate_step_2D, interval=500)
+    video_writer = animation.FFMpegWriter(fps=6)
+    anim.save('out/animation_2D.mp4', writer=video_writer)
 
 # ------------------------------------ 3D ANIMATION ------------------------------------
 
@@ -68,7 +77,8 @@ def animate_step_3D(frame):
         ax.set_ylabel("y")
         ax.set_zlabel("z")
         ax.voxels(filled, edgecolors='gray', shade=False)
-        # plt.savefig(f'out/{frame}.png')
+
+    plt.savefig(f'out/{frame}.png')
 
 def animate_3D(size):
     global grid_size, img_plot, ax
@@ -87,13 +97,14 @@ def animate_3D(size):
     filled = create_grid_3D(size, 0)
     img_plot = ax.voxels(filled, edgecolors='gray', shade=False)
 
-    ani = animation.FuncAnimation(fig, frames=20, func=animate_step_3D, interval=1000)
-    ani.save('out/animation_3D.gif')
+    anim = animation.FuncAnimation(fig, frames=20, func=animate_step_3D, interval=500)
+    video_writer = animation.FFMpegWriter(fps=2)
+    anim.save('out/animation_3D.mp4', writer=video_writer)
 
 # ------------------------------------ MAIN CODE ------------------------------------
 
 df = pd.read_csv('output.csv')
 df.set_index(['t'])
 
-# animate_2D(size = 10)
-animate_3D(size = 10)
+animate_2D(size = 100)
+# animate_3D(size = 5)

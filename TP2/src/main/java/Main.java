@@ -1,9 +1,11 @@
 import evolutionRules.EvolutionRule;
-import evolutionRules.lifeGameRules.B1S12Rule;
-import evolutionRules.lifeGameRules.B36S23Rule;
-import evolutionRules.lifeGameRules.B3S23D5Rule;
-import evolutionRules.lifeGameRules.B3S23Rule;
+import evolutionRules.lifeGameRules.r2D.Rule1112;
+import evolutionRules.lifeGameRules.r2D.Rule3623;
+import evolutionRules.lifeGameRules.r2D.Rule3323;
 import cell.Cell;
+import evolutionRules.lifeGameRules.r3D.Rule2645;
+import evolutionRules.lifeGameRules.r3D.Rule5556;
+import evolutionRules.lifeGameRules.r3D.Rule6657;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONTokener;
@@ -26,14 +28,18 @@ public class Main {
 
         EvolutionRule rule;
         switch (ruleStr) {
-            case "B1/S12":
-                rule = new B1S12Rule(); break;
-            case "B3/S23/D5":
-                rule = new B3S23D5Rule(); break;
-            case "B3/S23":
-                rule = new B3S23Rule(); break;
-            case "B36/S23":
-                rule = new B36S23Rule(); break;
+            case "1112":
+                rule = new Rule1112(); break;
+            case "3323":
+                rule = new Rule3323(); break;
+            case "3623":
+                rule = new Rule3623(); break;
+            case "5556":
+                rule = new Rule5556(); break;
+            case "6657":
+                rule = new Rule6657(); break;
+            case "2645":
+                rule = new Rule2645(); break;
             default:
                 throw new RuntimeException("Unknown rule name");
         }
