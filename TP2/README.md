@@ -1,3 +1,11 @@
+## Usage
+
+1. Install [FFMPEG](https://ffmpeg.org/download.html)
+2. Copy .env.template to .env and point 'ffmpeg_path' to ffmpeg.exe path
+3. **Build the project**: ``mvn package``
+4. Copy config.json.template to config.json and choose your config
+5. **Run the project**: ``java -jar target/run.jar config.json``
+
 ## 2D Patterns
 
 ### Rule 1112
