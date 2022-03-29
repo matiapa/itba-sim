@@ -62,7 +62,7 @@ public class Main {
 
         switch (method) {
             case "random":
-                int p = grid.getJSONObject("random").getInt("aliveProportion");
+                float p = grid.getJSONObject("random").getFloat("aliveProportion");
 
                 if (type.equals("2D"))
                     grid2D = randomGrid2D(L, p);
@@ -141,9 +141,10 @@ public class Main {
     }
 
     private static Cell[][] randomGrid2D(int L, double p) {
-        double N = Math.round(p * Math.pow(L, 2));
-        double u = L/2;
-        double sd = L/4;
+        long N = Math.round(p * L * L);
+        double u = (double) L / 2;
+        double sd = (double) (L / 4) / 3;
+
         Random r = new Random();
         Set<Point2D> aliveCellsCoordinates = new HashSet<>();
         int x, y;
@@ -154,8 +155,6 @@ public class Main {
             } while(aliveCellsCoordinates.contains(new Point2D(x, y)));
             aliveCellsCoordinates.add(new Point2D(x, y));
         }
-
-//        System.out.println(aliveCellsCoordinates);
 
         Cell[][] randomGrid2D = new Cell[L][L];
         for(int row=0; row < L; row++){
@@ -172,9 +171,10 @@ public class Main {
     }
 
     private static Cell[][][] randomGrid3D(int L, double p) {
-        double N = Math.round(p * Math.pow(L, 2));
-        double u = L/2;
-        double sd = L/4;
+        long N = Math.round(p * L * L);
+        double u = (double) L / 2;
+        double sd = (double) (L / 4) / 3;
+
         Random r = new Random();
         Set<Point3D> aliveCellsCoordinates = new HashSet<>();
         int x, y, z;
@@ -186,8 +186,6 @@ public class Main {
             } while(aliveCellsCoordinates.contains(new Point3D(x, y, z)));
             aliveCellsCoordinates.add(new Point3D(x, y, z));
         }
-
-//        System.out.println(aliveCellsCoordinates);
 
         Cell[][][] randomGrid3D = new Cell[L][L][L];
         for(int row=0; row < L; row++){
@@ -201,6 +199,8 @@ public class Main {
                 }
             }
         }
+
+        System.out.println("DONE");
 
         return randomGrid3D;
     }

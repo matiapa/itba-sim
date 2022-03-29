@@ -113,7 +113,7 @@ def plot_3D(size, animate=False):
 df = pd.read_csv('output.csv')
 df.set_index(['t'])
 
-grid_size = max([max(df['x']), max(df['y'])])
+grid_size = 100
 end_t = max(df['t'])
 
 if sys.argv[1] == 'animate':
