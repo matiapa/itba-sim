@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 from dotenv import load_dotenv
 import os
+import sys
 
 load_dotenv()
 
@@ -33,16 +34,16 @@ def animate_step_2D(frame):
 
     return img_plot,
 
-def animate_2D(size):
+def plot_2D(size, animate=False):
     global grid_size, img_plot
 
     fig, ax = plt.subplots(figsize=(8, 8))
 
     ax.set_xlabel("y")
     ax.set_ylabel("x")
-    # Si, los ejes van al revés
-    ax.set_xticks(np.arange(-.5, 10, 1), minor=True)
-    ax.set_yticks(np.arange(-.5, 10, 1), minor=True)
+
+    ax.set_xticks(np.arange(0, grid_size, 1), minor=True)
+    ax.set_yticks(np.arange(0, grid_size, 1), minor=True)
     # ax.grid(which='minor', color='grey', linestyle='-', linewidth=2)
 
     plt.tight_layout()
@@ -51,9 +52,12 @@ def animate_2D(size):
     grid = create_grid_2D(size, 0)
     img_plot = ax.imshow(grid, interpolation='nearest', cmap=ListedColormap(['black', 'white']))
 
-    anim = animation.FuncAnimation(fig, frames=100, func=animate_step_2D, interval=500)
-    video_writer = animation.FFMpegWriter(fps=6)
-    anim.save('out/animation_2D.mp4', writer=video_writer)
+    if animate:
+        anim = animation.FuncAnimation(fig, frames=end_t, func=animate_step_2D, interval=500)
+        video_writer = animation.FFMpegWriter(fps=2)
+        anim.save('out/animation_2D.mp4', writer=video_writer)
+    else:
+        plt.show()
 
 # ------------------------------------ 3D ANIMATION ------------------------------------
 
@@ -80,7 +84,7 @@ def animate_step_3D(frame):
 
     plt.savefig(f'out/{frame}.png')
 
-def animate_3D(size):
+def plot_3D(size, animate=False):
     global grid_size, img_plot, ax
 
     fig = plt.figure()
@@ -97,14 +101,31 @@ def animate_3D(size):
     filled = create_grid_3D(size, 0)
     img_plot = ax.voxels(filled, edgecolors='gray', shade=False)
 
-    anim = animation.FuncAnimation(fig, frames=20, func=animate_step_3D, interval=500)
-    video_writer = animation.FFMpegWriter(fps=2)
-    anim.save('out/animation_3D.mp4', writer=video_writer)
+    if animate:
+        anim = animation.FuncAnimation(fig, frames=end_t, func=animate_step_3D, interval=500)
+        video_writer = animation.FFMpegWriter(fps=2)
+        anim.save('out/animation_3D.mp4', writer=video_writer)
+    else:
+        plt.show()
 
 # ------------------------------------ MAIN CODE ------------------------------------
 
 df = pd.read_csv('output.csv')
 df.set_index(['t'])
 
-animate_2D(size = 100)
-# animate_3D(size = 5)
+grid_size = max([max(df['x']), max(df['y'])])
+end_t = max(df['t'])
+
+if sys.argv[1] == 'animate':
+    animate = True
+elif sys.argv[1] == 'snap':
+    animate = False
+else:
+    raise f'Unsupported operation {sys.argv[1]}'
+
+if 'z' in df.columns:
+    plot_3D(size = grid_size, animate = animate)
+else:
+    plot_2D(size = grid_size, animate = animate)
+
+df.columns
