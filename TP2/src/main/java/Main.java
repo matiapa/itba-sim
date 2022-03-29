@@ -2,27 +2,35 @@ import evolutionRules.EvolutionRule;
 import evolutionRules.lifeGameRules.r2D.Rule1112;
 import evolutionRules.lifeGameRules.r2D.Rule3623;
 import evolutionRules.lifeGameRules.r2D.Rule3323;
-import cell.Cell;
 import evolutionRules.lifeGameRules.r3D.Rule2645;
 import evolutionRules.lifeGameRules.r3D.Rule5556;
 import evolutionRules.lifeGameRules.r3D.Rule6657;
+
+import cell.Cell;
 import points.Point2D;
 import points.Point3D;
-import org.json.JSONArray;
-import org.json.JSONObject;
-import org.json.JSONTokener;
+
 import java.io.*;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.json.JSONTokener;
+
 
 public class Main {
 
     public static void main(String[] args) throws IOException {
+        if(args.length != 1) {
+            System.out.println("Usage: ./run.jar config.json");
+            return;
+        }
+
         // Read input parameters
 
-        InputStream is = new FileInputStream(new File("src/main/resources/config.json"));
+        InputStream is = new FileInputStream(args[0]);
         JSONObject json = new JSONObject(new JSONTokener(is));
 
         int maxIterations = json.getInt("maxIterations");
@@ -199,8 +207,6 @@ public class Main {
                 }
             }
         }
-
-        System.out.println("DONE");
 
         return randomGrid3D;
     }

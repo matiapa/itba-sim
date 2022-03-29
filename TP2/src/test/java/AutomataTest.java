@@ -1,5 +1,6 @@
 import cell.Cell;
 import evolutionRules.lifeGameRules.r2D.Rule3323;
+import evolutionRules.lifeGameRules.r3D.Rule5556;
 import org.json.JSONArray;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -51,15 +52,15 @@ public class AutomataTest {
 
     @Test
     public void test_B3S23_3D() {
-        int L = 25;
-        int maxT = 15;
+        int L = 5;
+        int maxT = 6;
 
         Integer[][][] initials = new Integer[][][]{
-            {{13,13,13},{13,13,14},{13,13,12},{13,14,13},{13,12,13},{14,13,13},{12,13,13}},                    // Blinker
+            {{2,1,1},{2,1,2},{2,1,3},{2,2,2},{2,3,1},{2,3,2},{2,3,3}},      // Blinker
         };
 
         Integer[][][] expectedFinals = new Integer[][][]{
-            {{2,1,4}, {2,2,4}, {2,3,4}},                  // Blinker
+            {{2,1,1},{2,1,2},{2,1,3},{2,2,2},{2,3,1},{2,3,2},{2,3,3}},      // Blinker
         };
 
         for(int i=0; i<initials.length; i++) {
@@ -69,7 +70,7 @@ public class AutomataTest {
             System.out.printf("Expecting: %s%n", Arrays.deepToString(expectedFinal.toArray()));
 
             Cell[][][] grid = Main.parsedGrid3D(L, new JSONArray(initials[i]));
-            Cell[][][] finalGrid = Automata.run(grid, new Rule3323(), maxT);
+            Cell[][][] finalGrid = Automata.run(grid, new Rule5556(), maxT);
             assertNotNull(finalGrid);
 
             List<Integer[]> finals = getAlivePoints(finalGrid);
