@@ -85,7 +85,7 @@ public class Main {
                 break;
             }
             case "alive_coordinates": {
-                JSONArray array = grid.getJSONArray("particles");
+                JSONArray array = grid.getJSONArray("aliveParticles");
 
                 if (type.equals("2D"))
                     grid2D = parsedGrid2D(L, array, false);
@@ -97,10 +97,20 @@ public class Main {
                 throw new RuntimeException("Invalid parameters");
         }
 
+        PrintWriter writer;
+        try {
+            writer = new PrintWriter("output.csv", "UTF-8");
+        } catch (IOException e) {
+            System.out.println("Couldn't create output file 'output.csv'");
+            return;
+        }
+
         if (grid2D != null)
-            Automata.run(grid2D, rule, maxIterations);
+            Automata.run(grid2D, rule, maxIterations, writer);
         else if(grid3D != null)
             Automata.run(grid3D, rule, maxIterations);
+
+        writer.close();
 
     }
 
@@ -148,7 +158,7 @@ public class Main {
         return grid;
     }
 
-    private static Cell[][] randomGrid2D(int L, double p) {
+    static Cell[][] randomGrid2D(int L, double p) {
         long N = Math.round(p * L * L);
         double u = (double) L / 2;
         double sd = (double) (L / 4) / 3;

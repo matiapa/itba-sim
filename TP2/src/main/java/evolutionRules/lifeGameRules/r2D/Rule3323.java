@@ -15,4 +15,8 @@ public class Rule3323 extends LifeGameRule {
         return cell.isAlive();
     }
 
+    @Override
+    public String toString() {
+        return "Rule3323";
+    }
 }
