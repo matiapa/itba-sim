@@ -106,7 +106,7 @@ public class Main {
         }
 
         if (grid2D != null)
-            Automata.run(grid2D, rule, maxIterations, writer);
+            Automata.run(grid2D, rule, maxIterations);
         else if(grid3D != null)
             Automata.run(grid3D, rule, maxIterations);
 

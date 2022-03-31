@@ -29,15 +29,6 @@ public class AutomataTest {
             {{5,7}, {6,8}, {6,9}, {7,7}, {7,8}}     // Glider
         };
 
-        PrintWriter writer;
-        try {
-            writer = new PrintWriter("output.csv", "UTF-8");
-            writer.println("rule,t,x,y,".concat("a,b"));
-        } catch (IOException e) {
-            System.out.println("Couldn't create output file 'output.csv'");
-            return;
-        }
-
         for(int i=0; i<initials.length; i++) {
             System.out.printf("Testing configuration %d%n", i);
 
@@ -45,7 +36,8 @@ public class AutomataTest {
             System.out.printf("Expecting: %s%n", Arrays.deepToString(expectedFinal.toArray()));
 
             Cell[][] grid = Main.parsedGrid2D(L, new JSONArray(initials[i]), false);
-            Cell[][] finalGrid = Automata.run(grid, new Rule3323(), maxT, writer);
+            List<Cell[][]> grids = Automata.run(grid, new Rule3323(), maxT);
+            Cell[][] finalGrid = grids.get(grids.size()-1);
             assertNotNull(finalGrid);
 
             List<Integer[]> finals = getAlivePoints(finalGrid);
@@ -60,7 +52,6 @@ public class AutomataTest {
             System.out.println("---------------------------");
         }
 
-        writer.close();
     }
 
     @Test

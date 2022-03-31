@@ -4,49 +4,88 @@ import evolutionRules.lifeGameRules.r2D.Rule1112;
 import evolutionRules.lifeGameRules.r2D.Rule3323;
 import evolutionRules.lifeGameRules.r2D.Rule3623;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 
 public class Statistics {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws FileNotFoundException, UnsupportedEncodingException {
 
         int L = 100;
         double p = 0.01;
-        int maxIterations = 1000;
-        int reps = 100;
+        int maxIterations = 100;
+        int samples = 100;
 
-        Cell[][] grid2D = Main.randomGrid2D(L, p);
+        // Perform {samples} amount of simulations with each studied rule
 
-        List<EvolutionRule> rules = Arrays.asList(
-                new Rule1112(),
-                new Rule3323(),
-                new Rule3623()
-        );
+        EvolutionRule[] rules = new EvolutionRule[]{new Rule1112(), new Rule3323(), new Rule3623()};
+        int aliveCells[][][] = new int[rules.length][maxIterations][samples];
+        double maxRadius[][][] = new double[rules.length][maxIterations][samples];
 
-        PrintWriter writer;
-        try {
-            writer = new PrintWriter("output.csv", "UTF-8");
-            writer.println("rule,t,x,y,".concat(grid2D[0][0].stateHeader()));
-        } catch (IOException e) {
-            System.out.println("Couldn't create output file 'output.csv'");
-            return;
+        for(int s=0; s<samples; s++) {
+            System.out.printf("Sample %d\n", s);
+            Cell[][] grid2D = Main.randomGrid2D(L, p);
+
+            for (int r=0; r<rules.length; r++) {
+                List<Cell[][]> grids = Automata.run(grid2D, rules[r], maxIterations);
+
+                for(int t=0; t<grids.size(); t++) {
+                    Cell[][] grid = grids.get(t);
+
+                    for(int x=0; x<L; x++) {
+                        for(int y=0; y<L; y++) {
+                            if(grid[x][y].isAlive()) {
+                                aliveCells[r][t][s] += 1;
+                                maxRadius[r][t][s] = Math.max(maxRadius[r][t][s], Math.hypot(x-(double) L/2, y-(double) L/2));
+                            }
+                        }
+                    }
+
+                }
+            }
         }
 
-//        for (EvolutionRule rule : rules) {
-//            System.out.println("Running rule: "+rule);
-//            for (int i = 0; i < reps; i++)
-//                Automata.run(Arrays.copyOf(grid2D,grid2D.length), rule, maxIterations, writer);
-//        }
+        // Calculate averages and standard deviations for each rule and time
 
-        for (int i = 0; i < reps; i++) {
-            System.out.println(i);
-            grid2D = Main.randomGrid2D(L, p);
-            Automata.run(grid2D, rules.get(0), maxIterations, writer);
+        double[][] avgAliveCells = new double[rules.length][maxIterations];
+        double[][] avgMaxRadius = new double[rules.length][maxIterations];
+
+        for (int r=0; r<rules.length; r++) {
+            for(int t=0; t<maxIterations; t++) {
+                for(int s=0; s<samples; s++) {
+                    avgAliveCells[r][t] += aliveCells[r][t][s];
+                    avgMaxRadius[r][t] += maxRadius[r][t][s];
+                }
+                avgAliveCells[r][t] /= samples;
+                avgMaxRadius[r][t] /= samples;
+            }
+        }
+
+        PrintWriter writer = new PrintWriter("stats_by_t.csv", "UTF-8");
+        writer.println("rule,t,avgMaxRadius,stdMaxRadius,avgAliveCells,stdAliveCells");
+        Locale.setDefault(Locale.US);
+
+        for (int r=0; r<rules.length; r++) {
+            for(int t=0; t<maxIterations; t++) {
+                double stdAliveCells = 0, stdMaxRadius = 0;
+                for(int s=0; s<samples; s++) {
+                    stdAliveCells += Math.pow(aliveCells[r][t][s] - avgAliveCells[r][t], 2);
+                    stdMaxRadius += Math.pow(maxRadius[r][t][s] - avgMaxRadius[r][t], 2);
+                }
+                stdAliveCells = Math.sqrt(stdAliveCells / (samples-1));
+                stdMaxRadius = Math.sqrt(stdMaxRadius / (samples-1));
+
+                writer.printf("%s,%d,%g,%g,%g,%g\n", rules[r], t, avgMaxRadius[r][t], stdMaxRadius, avgAliveCells[r][t], stdAliveCells);
+            }
         }
 
         writer.close();
     }
+
 }

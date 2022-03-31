@@ -1,0 +1,16 @@
+{
+  "grid": {
+    "size": 100,
+    "type": "2D",
+    "method": "alive_coordinates",
+    "particles": [
+      [48,50],[48,51],[48,52],[49,49],[49,52],[50,48],
+      [50,52],[51,48],[51,51],[52,48],[52,49],[52,50]
+    ],
+    "random": {
+      "aliveProportion": 0.1
+    }
+  },
+  "evolutionRule": "3623",
+  "maxIterations": 100
+}

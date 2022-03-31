@@ -1,16 +1,16 @@
 import cell.Cell;
 import evolutionRules.EvolutionRule;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Automata {
 
-    public static Cell[][] run(Cell[][] grid, EvolutionRule rule, int maxT, PrintWriter writer) {
+    public static List<Cell[][]> run(Cell[][] grid, EvolutionRule rule, int maxT) {
         int L = grid.length;
+        List<Cell[][]> grids = new ArrayList<>();
 
         Cell[][] newGrid;
         for(int t=0; t<=maxT; t++) {
@@ -18,17 +18,19 @@ public class Automata {
 
             for(int x=0; x<L; x++) {
                 for(int y=0; y<L; y++) {
-                    if(grid[x][y].isAlive())
-                        writer.println(String.format("%s,%d,%d,%d,%s", rule.toString(), t, x, y, grid[x][y].stateString()));
                     newGrid[x][y] = rule.evaluate(t, x, y, grid);
+                    if(newGrid[x][y] == null)
+                        break;
                 }
             }
 
-            if(t != maxT)
+            if(t != maxT) {
                 grid = newGrid;
+                grids.add(newGrid);
+            }
         }
 
-        return grid;
+        return grids;
     }
 
     public static Cell[][][] run(Cell[][][] grid, EvolutionRule rule, int maxT) {

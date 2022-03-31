@@ -11,6 +11,9 @@ public abstract class LifeGameRule implements EvolutionRule {
 
     @Override
     public Cell evaluate(int t, int x, int y, Cell[][] grid) {
+//        if(grid[x][y].isAlive() && (x == grid.length-1 || x == 0 || y == grid.length-1 || y == 0))
+//            return null;
+
         int aliveNeighbours = 0;
         for(int i = x - 1; i <= x + 1; i++) {
             for(int j = y - 1; j <= y + 1; j++) {
