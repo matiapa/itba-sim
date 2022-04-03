@@ -188,7 +188,7 @@ public class Main {
         return randomGrid2D;
     }
 
-    private static Cell[][][] randomGrid3D(int L, double p) {
+    static Cell[][][] randomGrid3D(int L, double p) {
         long N = Math.round(p * L * L);
         double u = (double) L / 2;
         double sd = (double) (L / 4) / 3;
@@ -210,6 +210,7 @@ public class Main {
             for(int col=0; col<L; col++){
                 for(int depth=0; depth<L; depth++){
                     if(aliveCellsCoordinates.contains(new Point3D(row, col, depth))){
+//                        System.out.println("hello");
                         randomGrid3D[row][col][depth] = new Cell(true);
                     } else {
                         randomGrid3D[row][col][depth] = new Cell(false);

@@ -74,7 +74,8 @@ public class AutomataTest {
             System.out.printf("Expecting: %s%n", Arrays.deepToString(expectedFinal.toArray()));
 
             Cell[][][] grid = Main.parsedGrid3D(L, new JSONArray(initials[i]));
-            Cell[][][] finalGrid = Automata.run(grid, new Rule5556(), maxT);
+            List<Cell[][][]> grids = Automata.run(grid, new Rule5556(), maxT);
+            Cell[][][] finalGrid = grids.get(grids.size() - 1);
             assertNotNull(finalGrid);
 
             List<Integer[]> finals = getAlivePoints(finalGrid);
