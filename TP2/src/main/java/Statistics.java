@@ -18,8 +18,8 @@ public class Statistics {
 
 
     public static void main(String[] args) throws FileNotFoundException, UnsupportedEncodingException {
-//        stats2D();
-        stats3D();
+        stats2D();
+//        stats3D();
     }
 
     public static void stats3D() throws FileNotFoundException, UnsupportedEncodingException {
@@ -30,7 +30,7 @@ public class Statistics {
 
         // Perform {samples} amount of simulations with each studied rule
 
-        EvolutionRule[] rules = new EvolutionRule[]{new Rule5556(), new Rule6657()};
+        EvolutionRule[] rules = new EvolutionRule[]{new Rule2645(), new Rule5556(), new Rule6657()};
         int[][][] aliveCells = new int[rules.length][maxIterations][samples];
         double[][][] maxRadius = new double[rules.length][maxIterations][samples];
 
@@ -110,7 +110,7 @@ public class Statistics {
 
         int L = 100;
         double p = 0.01;
-        int maxIterations = 1000;
+        int maxIterations = 100;
         int samples = 100;
 
         // Perform {samples} amount of simulations with each studied rule

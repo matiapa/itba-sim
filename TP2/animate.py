@@ -56,10 +56,9 @@ def plot_2D(size, animate=False):
     img_plot = ax.imshow(grid, interpolation='nearest', cmap=ListedColormap(['black', 'white']))
 
     if animate:
-        anim.save('out/animation_3D.gif')
-        # anim = animation.FuncAnimation(fig, frames=end_t, func=animate_step_2D, interval=500)
-        # video_writer = animation.FFMpegWriter(fps=2)
-        # anim.save('out/animation_2D.mp4', writer=video_writer)
+        anim = animation.FuncAnimation(fig, frames=end_t, func=animate_step_2D, interval=500)
+        video_writer = animation.FFMpegWriter(fps=2)
+        anim.save('out/animation_2D.mp4', writer=video_writer)
     else:
         plt.show()
 
@@ -110,10 +109,10 @@ def plot_3D(size, animate=False):
     img_plot = ax.voxels(filled, edgecolors='gray', shade=False)
 
     if animate:
-        anim.save('out/animation_3D.gif')
-        # anim = animation.FuncAnimation(fig, frames=end_t, func=animate_step_3D, interval=500)
-        # video_writer = animation.FFMpegWriter(fps=2)
-        # anim.save('out/animation_3D.mp4', writer=video_writer)
+        # anim.save('out/animation_3D.gif')
+        anim = animation.FuncAnimation(fig, frames=end_t, func=animate_step_3D, interval=500)
+        video_writer = animation.FFMpegWriter(fps=2)
+        anim.save('out/animation_3D.mp4', writer=video_writer)
     else:
         plt.show()
 

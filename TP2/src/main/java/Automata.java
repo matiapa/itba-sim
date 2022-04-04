@@ -8,13 +8,13 @@ import java.util.List;
 
 public class Automata {
 
-    public static List<Cell[][]> run(Cell[][] grid, EvolutionRule rule, int maxT) {
+    public static List<Cell[][]> run(Cell[][] grid, EvolutionRule rule, int iterations) {
         int L = grid.length;
         List<Cell[][]> grids = new ArrayList<>();
         grids.add(grid);
 
         Cell[][] newGrid;
-        for(int t=0; t<=maxT; t++) {
+        for(int t=0; t<iterations; t++) {
             newGrid = new Cell[L][L];
 
             for(int x=0; x<L; x++) {
@@ -25,7 +25,7 @@ public class Automata {
                 }
             }
 
-            if(t != maxT) {
+            if(t != (iterations-1)) {
                 grid = newGrid;
                 grids.add(newGrid);
             }
@@ -34,13 +34,13 @@ public class Automata {
         return grids;
     }
 
-    public static List<Cell[][][]> run(Cell[][][] grid, EvolutionRule rule, int maxT) {
+    public static List<Cell[][][]> run(Cell[][][] grid, EvolutionRule rule, int iterations) {
         int L = grid.length;
         List<Cell[][][]> grids = new ArrayList<>();
         grids.add(grid);
 
         Cell[][][] newGrid;
-        for(int t=0; t<=maxT; t++) {
+        for(int t=0; t<iterations; t++) {
             newGrid = new Cell[L][L][L];
 
             for(int x=0; x<L; x++) {
@@ -53,7 +53,7 @@ public class Automata {
                 }
             }
 
-            if(t != maxT) {
+            if(t != (iterations-1)) {
                 grid = newGrid;
                 grids.add(newGrid);
             }
