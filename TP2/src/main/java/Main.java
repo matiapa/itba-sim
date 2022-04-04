@@ -12,6 +12,7 @@ import points.Point3D;
 
 import java.io.*;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
@@ -105,10 +106,35 @@ public class Main {
             return;
         }
 
-        if (grid2D != null)
-            Automata.run(grid2D, rule, maxIterations);
-        else if(grid3D != null)
-            Automata.run(grid3D, rule, maxIterations);
+        if (grid2D != null) {
+            writer.println("rule,t,x,y,a,b");
+            List<Cell[][]> results = Automata.run(grid2D, rule, maxIterations);
+            for (int t = 0; t < results.size(); t++) {
+                Cell[][] aux = results.get(t);
+                for (int i = 0; i < aux.length; i++) {
+                    for (int j = 0; j < aux[i].length; j++) {
+                        if (aux[i][j].isAlive()) {
+                            writer.println(String.format("%s,%d,%d,%d,%s", rule,t,i,j,aux[i][j].toString()));
+                        }
+                    }
+                }
+            }
+
+        } else if(grid3D != null) {
+            writer.println("rule,t,x,y,z,a,b");
+            List<Cell[][][]> results = Automata.run(grid3D, rule, maxIterations);
+            for (int t = 0; t < results.size(); t++) {
+                for (int i = 0; i < results.get(t).length; i++) {
+                    for (int j = 0; j < results.get(t)[i].length; j++) {
+                        for (int k = 0; k < results.get(t)[i][j].length; k++) {
+                            if (results.get(t)[i][j][k].isAlive()) {
+                                writer.println(String.format("%s,%d,%d,%d,%s", rule,t,i,j,results.get(t)[i][j][k].toString()));
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
         writer.close();
 
