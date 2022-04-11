@@ -1,16 +1,14 @@
 {
   "grid": {
-    "size": 100,
-    "type": "2D",
+    "size": 15,
+    "type": "3D",
     "method": "alive_coordinates",
-    "particles": [
-      [48,50],[48,51],[48,52],[49,49],[49,52],[50,48],
-      [50,52],[51,48],[51,51],[52,48],[52,49],[52,50]
-    ],
+    "particles": [[1,1,1],[1,2,1],[1,2,3],[1,3,1],[1,3,2],
+      [2,1,1],[2,2,1],[2,2,3],[2,3,1],[2,3,2]],
     "random": {
-      "aliveProportion": 0.1
+      "aliveProportion": 0.25
     }
   },
-  "evolutionRule": "3623",
-  "maxIterations": 100
+  "evolutionRule": "6657",
+  "maxIterations": 20
 }

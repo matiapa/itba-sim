@@ -57,10 +57,10 @@ def plot_2D(size, animate=False):
     img_plot = ax.imshow(grid, interpolation='nearest', cmap=cmap)
 
     if animate:
-        anim = animation.FuncAnimation(fig, frames=end_t, func=animate_step_2D, interval=300)
-        # anim.save('animation_2D.gif')
-        video_writer = animation.FFMpegWriter(fps=2)
-        anim.save('out/animation_2D.mp4', writer=video_writer)
+        anim = animation.FuncAnimation(fig, frames=end_t, func=animate_step_2D, interval=50)
+#         video_writer = animation.FFMpegWriter(fps=2)
+        anim.save('out/animation_2D.gif')
+        # anim.save('out/animation_2D.mp4', writer=video_writer)
     else:
         plt.show()
 
@@ -123,9 +123,9 @@ def plot_3D(size, animate=False):
 
     if animate:
         anim = animation.FuncAnimation(fig, frames=end_t, func=animate_step_3D, interval=300)
-        # anim.save('animation_3D.gif')
-        video_writer = animation.FFMpegWriter(fps=2)
-        anim.save('out/animation_3D.mp4', writer=video_writer)
+#         video_writer = animation.FFMpegWriter(fps=2)
+        anim.save('animation_3D.gif')
+        # anim.save('out/animation_3D.mp4', writer=video_writer)
     else:
         plt.show()
 
@@ -134,7 +134,7 @@ def plot_3D(size, animate=False):
 df = pd.read_csv('output.csv')
 df.set_index(['t'])
 
-grid_size = 100
+grid_size = 15
 end_t = max(df['t'])
 
 load_iter = tqdm(range(end_t)).__iter__()
@@ -150,5 +150,3 @@ if 'z' in df.columns:
     plot_3D(size = grid_size, animate = animate)
 else:
     plot_2D(size = grid_size, animate = animate)
-
-df.columns
