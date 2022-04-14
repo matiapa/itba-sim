@@ -18,7 +18,7 @@ public class Simulation {
         List<State> states = new ArrayList<>();
 
         List<Particle> particles = initialParticles != null ? initialParticles : createParticles(N);
-        saveState(states, particles);
+        saveState(states, particles, null);
 
         // Calculate initial collisions
         for(int i=0; i<particles.size()-1; i++)
@@ -26,6 +26,7 @@ public class Simulation {
         for (Particle particle : particles)
             addWallCollisions(particle, collisions);
 
+        int collCount = 0;
         while(t < T) {
             // Get the nearest in time collision
             Collision collision = collisions.poll();
@@ -56,14 +57,15 @@ public class Simulation {
                 addParticleCollisions(c.p1, particles, collisions);
                 addParticleCollisions(c.p2, particles, collisions);
                 addWallCollisions(c.p1, collisions);
-                addWallCollisions(c.p1, collisions);
+                addWallCollisions(c.p2, collisions);
             } else if(collision instanceof WallCollision c) {
                 addParticleCollisions(c.particle, particles, collisions);
                 addWallCollisions(c.particle, collisions);
             }
 
             // Save the state of the system
-            saveState(states, particles);
+            saveState(states, particles, collision);
+            collCount++;
         }
 
         return states;
@@ -107,8 +109,9 @@ public class Simulation {
     private static void addParticleCollisions(Particle p1, List<Particle> particles, Queue<Collision> collisions) {
         // Add collisions with other particles
         for(Particle p2 : particles) {
-            float dx = p1.x-p2.x, dy=p1.y-p2.y, dvx=p1.vx-p2.vx, dvy=p1.vy-p2.vy;
-            float s=p1.r+p2.r;
+            float dx = p2.x-p1.x,    dy = p2.y-p1.y;
+            float dvx = p2.vx-p1.vx, dvy = p2.vy-p1.vy;
+            float s = p1.r+p2.r;
 
             float dv_dr = dvx * dx + dvy * dy;
             float dv_dv = dvx*dvx + dvy*dvy;
@@ -134,10 +137,10 @@ public class Simulation {
             collisions.add(new WallCollision(p, WallCollision.Wall.LEFT, t-(p.x-p.r)/p.vx));
     }
 
-    private static void saveState(List<State> states, List<Particle> particles) {
+    private static void saveState(List<State> states, List<Particle> particles, Collision collision) {
         particles = particles.stream().map(p -> new Particle(p.id, p.x, p.y, p.vx, p.vy, p.m, p.r))
                 .collect(Collectors.toList());
-        states.add(new State(t, particles));
+        states.add(new State(t, particles, collision));
     }
 
 }

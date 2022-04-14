@@ -24,4 +24,9 @@ public class WallCollision extends Collision {
 
     public enum Wall{UPPER, LOWER, LEFT, RIGHT}
 
+    @Override
+    public String toString() {
+        return String.format("P%d %s", particle.id, wall);
+    }
+
 }

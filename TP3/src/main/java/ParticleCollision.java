@@ -22,15 +22,29 @@ public class ParticleCollision extends Collision {
 
     @Override
     public void operate() {
-        float dv_dr = (p1.vx - p2.vx) * (p1.x - p2.x) + (p1.vy - p2.vy) * (p1.y - p2.y);
+        float dx = p2.x-p1.x,    dy = p2.y-p1.y;
+        float dvx = p2.vx-p1.vx, dvy = p2.vy-p1.vy;
+
+        float dv_dr = dvx * dx + dvy * dy;
         float s = p1.r + p2.r;
 
         float J = 2 * p1.m * p2.m * dv_dr / (s * (p1.m + p2.m));
-        float Jx = J * (p1.x-p2.x) / s;
-        float Jy = J * (p1.y-p2.y) / s;
+        float Jx = J * dx / s;
+        float Jy = J * dy / s;
 
-        p1.x += Jx/p1.m; p1.y += Jy/p1.m;
-        p2.x += Jx/p2.m; p2.y += Jy/p2.m;
+        p1.vx += Jx/p1.m; p1.vy += Jy/p1.m;
+        p2.vx -= Jx/p2.m; p2.vy -= Jy/p2.m;
+
+        // If numbers are not limited in precision, numerical errors lead to undesired behaviour
+        // For example, a particle moving in y=x, may end up moving in y=x+n*eps.
+        p1.vx = (float) Math.round(p1.vx * 1000) / 1000;
+        p1.vy = (float) Math.round(p1.vy * 1000) / 1000;
+        p2.vx = (float) Math.round(p2.vx * 1000) / 1000;
+        p2.vy = (float) Math.round(p2.vy * 1000) / 1000;
     }
 
+    @Override
+    public String toString() {
+        return String.format("P%d P%d", p1.id, p2.id);
+    }
 }
