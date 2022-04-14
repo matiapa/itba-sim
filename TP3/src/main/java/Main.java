@@ -38,9 +38,9 @@ public class Main {
 
         System.out.println("Writing output file...");
         PrintWriter writer = new PrintWriter(OUT_FILE_NAME, StandardCharsets.UTF_8);
-        writer.println("t,id,x,y,vx,vy,c");
+        writer.println("t,id,x,y,vx,vy");
         states.forEach(state -> {
-            state.particles.forEach(p -> writer.printf("%g,%s,%s\n", state.t, p, state.collision));
+            state.particles.forEach(p -> writer.printf("%g,%s\n", state.t, p));
         });
         writer.close();
     }

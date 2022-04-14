@@ -26,7 +26,6 @@ public class Simulation {
         for (Particle particle : particles)
             addWallCollisions(particle, collisions);
 
-        int collCount = 0;
         while(t < T) {
             // Get the nearest in time collision
             Collision collision = collisions.poll();
@@ -64,8 +63,8 @@ public class Simulation {
             }
 
             // Save the state of the system
-            saveState(states, particles, collision);
-            collCount++;
+            if(collisions.peek() != null && collisions.peek().t != t)
+                saveState(states, particles, collision);
         }
 
         return states;
