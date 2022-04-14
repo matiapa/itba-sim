@@ -32,6 +32,6 @@ public class Particle {
 
     @Override
     public String toString() {
-        return String.format("%d,%g,%g,%g,%g,%g,%g", id, x, y, vx, vy, m, r);
+        return String.format("%d,%g,%g,%g,%g", id, x, y, vx, vy);
     }
 }

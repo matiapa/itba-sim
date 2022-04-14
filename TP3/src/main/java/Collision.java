@@ -1,4 +1,4 @@
-public abstract class Collision implements Comparable<ParticleCollision> {
+public abstract class Collision implements Comparable<Collision> {
 
     protected Float t;
 
@@ -7,7 +7,7 @@ public abstract class Collision implements Comparable<ParticleCollision> {
     }
 
     @Override
-    public int compareTo(ParticleCollision o) {
+    public int compareTo(Collision o) {
         return t.compareTo(o.t);
     }
 

@@ -4,6 +4,13 @@ public class ParticleCollision extends Collision {
 
     public ParticleCollision(Particle p1, Particle p2, float t) {
         super(t);
+
+        if(t < 0) {
+            System.out.printf("t: %g\n", t);
+            System.out.printf("P1: %s\n", p1);
+            System.out.printf("P2: %s\n", p2);
+        }
+
         this.p1 = p1;
         this.p2 = p2;
     }
