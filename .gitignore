@@ -9,6 +9,8 @@ out/
 *.zip
 *.tar.gz
 *.rar
+*.xyz
+*.txt
 
 # Intellij
 .idea/

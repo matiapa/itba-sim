@@ -17,6 +17,10 @@ public class Particle {
         this.r = r;
     }
 
+    public Particle (int id) {
+        this.id = id;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -32,6 +36,6 @@ public class Particle {
 
     @Override
     public String toString() {
-        return String.format("%d,%g,%g,%g,%g", id, x, y, vx, vy);
+        return String.format("%d,%g,%g,%g,%g,%g", id, x, y, vx, vy, r);
     }
 }
