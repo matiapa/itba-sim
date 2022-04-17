@@ -7,7 +7,7 @@ import java.util.Locale;
 
 public class Main {
 
-    private static final String OUT_FILE_NAME = "out.csv";
+    private static final String OUT_FILE_NAME = "stats.txt";
     private static int N = 100;
     private static int T = 100000;
 
@@ -34,15 +34,16 @@ public class Main {
 //         );
 
         System.out.println("Running simulation...");
-        List<State> states = Simulation.run(N, T);
+        Result result = Simulation.run(N, T);
 
         System.out.println("Writing output file...");
-//        PrintWriter writer = new PrintWriter(OUT_FILE_NAME, String.valueOf(StandardCharsets.UTF_8));
-//        writer.println("t,id,x,y,vx,vy,r");
-//        states.forEach(state -> {
-//            state.particles.forEach(p -> writer.printf("%g,%s\n", state.t, p));
-//        });
-//        writer.close();
+        PrintWriter writer = new PrintWriter(OUT_FILE_NAME, String.valueOf(StandardCharsets.UTF_8));
+        writer.println(String.format("%d %g", result.getStates().size() - 1, result.getT())); // borrar el primer estado
+        writer.println("t,id,x,y,vx,vy,r,d");
+        result.getStates().forEach(state -> {
+            state.particles.forEach(p -> writer.printf("%g,%s,%g\n", state.t, p, state.collision == null ? 0 : state.collision.getTimeTaken()));
+        });
+        writer.close();
     }
 
 }

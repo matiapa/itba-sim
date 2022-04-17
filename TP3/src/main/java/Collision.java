@@ -1,6 +1,7 @@
 public abstract class Collision implements Comparable<Collision> {
 
     protected Float t;
+    private float timeTaken = 0;
 
     public Collision(Float t) {
         this.t = t;
@@ -15,4 +16,11 @@ public abstract class Collision implements Comparable<Collision> {
 
     public abstract void operate();
 
+    public void setTimeTaken(float timeTaken) {
+        this.timeTaken = timeTaken;
+    }
+
+    public float getTimeTaken() {
+        return timeTaken;
+    }
 }

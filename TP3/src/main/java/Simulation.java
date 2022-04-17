@@ -16,11 +16,11 @@ public class Simulation {
     private static float t = 0;
     private static float writeT = 0;
 
-    public static List<State> run(int N, float T) throws FileNotFoundException, UnsupportedEncodingException {
+    public static Result run(int N, float T) throws FileNotFoundException, UnsupportedEncodingException {
         return run(N, T, null);
     }
 
-    public static List<State> run(int N, float T, List<Particle> initialParticles) throws FileNotFoundException, UnsupportedEncodingException {
+    public static Result run(int N, float T, List<Particle> initialParticles) throws FileNotFoundException, UnsupportedEncodingException {
         Queue<Collision> collisions = new PriorityQueue<>();
         List<State> states = new ArrayList<>();
 
@@ -49,6 +49,7 @@ public class Simulation {
                 p.x += p.vx * (collision.t - t);
                 p.y += p.vy * (collision.t - t);
             }
+            collision.setTimeTaken(collision.t - t);
             t = collision.t;
 
             // Invalidate future collisions that have the colliding particles involved
@@ -60,7 +61,7 @@ public class Simulation {
 
                 // Check if big particle has collided with wall
                 if (c.particle.equals(bigParticle))
-                    return states;
+                    return new Result(t, states);
 
                 collisions.removeIf(fc -> fc.involves(c.particle));
             }
@@ -93,7 +94,7 @@ public class Simulation {
         }
 
         writer.close();
-        return states;
+        return new Result(t, states);
     }
 
     private static List<Particle> createParticles(int N) {
