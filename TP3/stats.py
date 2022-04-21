@@ -47,17 +47,28 @@ plt.show()
 #-----------------------------------------------------------------------------
 
 # Falta meterle cambio de temperatura
+big_particle_file = open('big_particle.csv', 'r')
+df_big_particle = pd.read_csv(big_particle_file)
+tf = 70 # tiempo final de lectura
 
-tf = 10 # tiempo final de lectura
+amount = len(df_big_particle.groupby('K'))
+print(amount)
 
-big_x = df.loc[(df['id'] == 0) & (df['t'] < tf), 'x']
-big_y = df.loc[(df['id'] == 0) & (df['t'] < tf), 'y']
+for group, data in df_big_particle.groupby('K'):
+    fig, ax = plt.subplots(figsize=(10,10))
+    big_x = data.loc[(data['id'] == 0) & (data['t'] < tf), 'x']
+    big_y = data.loc[(data['id'] == 0) & (data['t'] < tf), 'y']
 
-fig, ax = plt.subplots(figsize=(10, 10))
-ax.plot(big_x, big_y)
-ax.plot([3], [3], 'ro') # punto inicial
-ax.set_xlim(0, 6)
-ax.set_ylim(0, 6)
-plt.grid()
-plt.tight_layout()
-plt.show()
+    ax.plot(big_x, big_y)
+    ax.plot([3], [3], 'ro') # punto inicial
+    ax.set_xlim(0, 6)
+    ax.set_ylim(0, 6)
+
+    ax.set_xlabel('x [m]')
+    ax.set_ylabel('y [m]')
+    ax.set_title('Trayectoria de la particula grande para Ek = {} J'.format(group))
+
+    plt.grid()
+    plt.tight_layout()
+    plt.savefig('big_particle_K={}.png'.format(group))
+    # plt.show()

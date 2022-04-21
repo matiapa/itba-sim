@@ -21,6 +21,7 @@ public class Simulation {
     }
 
     public static Result run(int N, float T, List<Particle> initialParticles) throws FileNotFoundException, UnsupportedEncodingException {
+        t = 0;
         Queue<Collision> collisions = new PriorityQueue<>();
         List<State> states = new ArrayList<>();
 
@@ -97,8 +98,13 @@ public class Simulation {
         return new Result(t, states);
     }
 
-    private static List<Particle> createParticles(int N) {
+    public static List<Particle> createParticles(int N) {
+        return createParticles(N, Vm);
+    }
+
+    public static List<Particle> createParticles(int N, double vMax) {
         List<Particle> particles = new ArrayList<>();
+        Random rand = new Random();
 
         particles.add(bigParticle);
 
@@ -110,8 +116,10 @@ public class Simulation {
                 superposition = checkSuperposition(particles, x, y, R1);
             } while(superposition);
 
-            float vx = (float) Math.random() * 2*Vm - Vm;
-            float vy = (float) Math.random() * 2*Vm - Vm;
+            double angle = Math.PI*rand.nextDouble();
+            double vm = vMax*rand.nextDouble();
+            float vx = (float) (Math.cos(angle)*vm);
+            float vy = (float) (Math.sin(angle)*vm);
 
             particles.add(new Particle(n, x, y, vx, vy, M1, R1));
         }
