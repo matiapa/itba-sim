@@ -16,11 +16,11 @@ public class Simulation {
     private static float t = 0;
     private static float writeT = 0;
 
-    public static Result run(int N, float T) throws FileNotFoundException, UnsupportedEncodingException {
-        return run(N, T, null);
+    public static Result run(int N, float T, boolean writeState) throws FileNotFoundException, UnsupportedEncodingException {
+        return run(N, T, null, writeState);
     }
 
-    public static Result run(int N, float T, List<Particle> initialParticles) throws FileNotFoundException, UnsupportedEncodingException {
+    public static Result run(int N, float T, List<Particle> initialParticles, boolean writeState) throws FileNotFoundException, UnsupportedEncodingException {
         t = 0;
         Queue<Collision> collisions = new PriorityQueue<>();
         List<State> states = new ArrayList<>();
