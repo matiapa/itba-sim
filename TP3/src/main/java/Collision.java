@@ -20,7 +20,7 @@ public abstract class Collision implements Comparable<Collision> {
         this.timeTaken = timeTaken;
     }
 
-    public float getTimeTaken() {
+    public Float getTimeTaken() {
         return timeTaken;
     }
 }

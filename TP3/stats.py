@@ -4,45 +4,72 @@ import numpy as np
 import pandas as pd
 import math
 
-# Stats file
-stats_file = open('stats.txt', 'r')
 
-fist_line = stats_file.readline().rstrip().split(' ')
-collision_count = int(fist_line[0])
-simulation_time = float(fist_line[1])
-
-# Se lee el archivo a partir de la segunda fila como un archivo csv
-df = pd.read_csv(stats_file, skiprows=[1])
+plt.rcParams.update({'font.size': 18})
 
 #-----------------------------------------------------------------------------
 #                                  Punto 1
 #-----------------------------------------------------------------------------
 
-def punto_1():
-    # Punto a: Frecuencia de colisiones
+def analyze_file(file_name):
+    collision_file = open(file_name, 'r')
+    fist_line = collision_file.readline().rstrip().split(' ')
+    collision_count = int(fist_line[0])
+    simulation_time = float(fist_line[1])
+    avg_collision_time = simulation_time/collision_count
 
     print('Collision count: {}'.format(collision_count))
     print('Simulation time: {}'.format(simulation_time))
-    print('Average collision time: {}'.format(simulation_time/collision_count))
+    print('Average collision time: {}'.format(avg_collision_time*1000))
 
-    # Punto b: Distribucion de tiempos de colisiones
-    times = list()
-    for group, data in df.groupby('t'):
-        if (group == 0):
-            continue
-        # get first row from data
-        row = data.iloc[0]
-        times.append(row['d'])
+    df_collision = pd.read_csv(collision_file)
+    p, x = np.histogram(df_collision['d'], bins=100)
+    # x = [i*1000 for i in x]
+    p = [float(i)/(collision_count*(x[1]-x[0])) for i in p]
 
-    plt.hist(times, bins = 100)
-    plt.show()
+    return x, p, avg_collision_time
 
+def punto_1():
+    
+    x, p, avg_x = analyze_file('collision_time_110.csv')
+    avg_y = np.interp(avg_x, x[:-1], p)
+    plt.plot(x[:-1], p, label='N=110')
+    plt.plot(avg_x, avg_y, 'bo')
+
+
+    x, p, avg_x = analyze_file('collision_time_125.csv')
+    avg_y = np.interp(avg_x, x[:-1], p)
+    plt.plot(x[:-1], p, label='N=125')
+    plt.plot(avg_x, avg_y,'yo')
+
+
+    x, p, avg_x = analyze_file('collision_time_140.csv')
+    avg_y = np.interp(avg_x, x[:-1], p)
+    plt.plot(x[:-1], p, label='N=140')
+    plt.plot(avg_x, avg_y, 'go')
+
+    plt.xlabel('Tiempo de colisión (s)')
+    plt.ylabel('PDF')
+    plt.ticklabel_format(axis="both", style="sci", scilimits=(0,0))
+    plt.legend(loc='best')
+    plt.grid()
+    plt.tight_layout()
+
+    # plt.yscale('log')
+    # plt.xscale('log')
+    plt.savefig('collision_time.png')
+
+punto_1()
 
 #-----------------------------------------------------------------------------
 #                                  Punto 2
 #-----------------------------------------------------------------------------
 
 def punto_2():
+    # Stats file
+    stats_file = open('stats.txt', 'r')
+    df = pd.read_csv(stats_file, skiprows=[1])
+
     # Punto a: Distribucion de modulos de velocidades
     init_speeds = list()
     speeds = list()
@@ -86,23 +113,23 @@ def punto_3():
     tf = 70 # tiempo final de lectura
 
     amount = len(df_big_particle.groupby('K'))
-    print(amount)
+    fig1, ax1 = plt.subplots(figsize=(10,10))
 
     for group, data in df_big_particle.groupby('K'):
-        fig, ax = plt.subplots(figsize=(10,10))
         big_x = data.loc[(data['id'] == 0) & (data['t'] < tf), 'x']
         big_y = data.loc[(data['id'] == 0) & (data['t'] < tf), 'y']
 
-        ax.plot(big_x, big_y)
-        ax.plot([3], [3], 'ro') # punto inicial
-        ax.set_xlim(0, 6)
-        ax.set_ylim(0, 6)
+        ax1.plot(big_x, big_y, label="Ek = {} J".format(round(group, 1)))
+        ax1.plot([3], [3], 'ro') # punto inicial
+        ax1.set_xlim(0, 6)
+        ax1.set_ylim(0, 6)
 
-        ax.set_xlabel('x [m]')
-        ax.set_ylabel('y [m]')
-        ax.set_title('Trayectoria de la particula grande para Ek = {} J'.format(group))
 
-        plt.grid()
-        plt.tight_layout()
-        plt.savefig('big_particle_K={}.png'.format(group))
-        # plt.show()
+    ax1.set_xlabel('Partícula Grande X (m)')
+    ax1.set_ylabel('Partícula Grande Y (m)')
+    plt.grid()
+    plt.legend(loc='best')
+    plt.savefig('big_particle.png')
+    # plt.show()
+
+# punto_3()

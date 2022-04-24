@@ -65,7 +65,7 @@ for line in out_file:
             else:
                 r_color, g_color, b_color = 1, 0, 0
 
-        ln = str(id) + ' ' + str(x) + ' ' + str(y) + ' ' + str(r) + ' ' + str(r_color) + ' ' + str(g_color) + ' ' + str(b_color) + '\n'
+        ln = str(int(id) + 1) + ' ' + str(x) + ' ' + str(y) + ' ' + str(r) + ' ' + str(r_color) + ' ' + str(g_color) + ' ' + str(b_color) + '\n'
         ovito_file.write(ln)
 
 ovito_file.close()
