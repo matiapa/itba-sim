@@ -117,24 +117,31 @@ def punto_4():
     fig, ax = plt.subplots(2)
 
     ax[0].errorbar(x = df['t'], y = df['b_avg'], yerr = df['b_dev'], fmt='o ')
-    ax[0].set_xlabel('t [s]')
-    ax[0].set_ylabel('DCM [m^2]')
+    ax[0].set_xlabel('t (s)')
+    ax[0].set_ylabel('DCM '+r'($\mathregular{m^2}$)')
     ax[0].set_title('Particula grande (N=140, S=100)')
     
     r = linregress(df['t'], df['b_avg'])
-    ax[0].plot([0, max_t], [r.intercept, r.intercept + r.slope * max_t], marker='o', label=f'D={round(r.slope, 2)}')
+    ax[0].plot([0, max_t], [r.intercept, r.intercept + r.slope * max_t], marker='o', label=f'D={round(r.slope/2, 2)}' + r'$\mathregular{m^2/s}$')
     ax[0].legend()
 
     ax[1].errorbar(x = df['t'], y = df['s_avg'], yerr = df['s_dev'], fmt='o ')
-    ax[1].set_xlabel('t [s]')
-    ax[1].set_ylabel('DCM [m^2]')
+    ax[1].set_xlabel('t (s)')
+    ax[1].set_ylabel('DCM '+r'($\mathregular{m^2}$)')
     ax[1].set_title('Particulas chicas (N=140, S=100)')
 
     r = linregress(df['t'], df['s_avg'])
-    ax[1].plot([0, max_t], [r.intercept, r.intercept + r.slope * max_t], marker='o', label=f'D={round(r.slope, 2)}')
+    ax[1].plot([0, max_t], [r.intercept, r.intercept + r.slope * max_t], marker='o', label=f'D={round(r.slope/2, 2)}' + r'$\mathregular{m^2/s}$')
     ax[1].legend()
 
     fig.tight_layout()
+    plt.show()
+
+    plt.errorbar(x = [100, 110, 120, 130], y = [0.05, 0.02, 0.05, 0.05], yerr = [0.01, 0.004, 0.012, 0.017], fmt='o ', label='Particula grande')
+    plt.errorbar(x = [100, 110, 120, 130], y = [0.16, 0.12, 0.11, 0.09], yerr = [0.021, 0.014, 0.009, 0.02], fmt='o ', label='Particulas chicas')
+    plt.xlabel('Numero de particulas')
+    plt.ylabel('Coeficiente de difusion '+r'($\mathregular{m^2/s}$)')
+    plt.legend()
     plt.show()
 
 punto_4()

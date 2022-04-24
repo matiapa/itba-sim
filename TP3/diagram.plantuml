@@ -1,0 +1,66 @@
+@startuml
+
+class Collision {
+    float t
+    {abstract} operate()
+    {abstract} involves(Particle p)
+    compareTo(Collision o)
+}
+
+class WallCollision {
+    Wall w
+    Particle p
+    operate()
+    involves(Particle p)
+}
+
+class ParticleCollision {
+    Particle p1
+    Particle p2
+    operate()
+    involves(Particle p)
+}
+
+Collision <|-- WallCollision
+Collision <|-- ParticleCollision
+
+enum Wall {
+    UPPER
+    LOWER   
+    LEFT
+    RIGHT
+}
+
+class Particle {
+    int id
+    float x, y
+    float vx, vy
+    float m, r
+}
+
+class State {
+    List<Particle> particles
+    Collision collision
+}
+
+class Simulation {
+    Queue<Collision> futureCollisions
+    List<Particle> particles
+    
+    List<State> run(int N, int maxT)
+    List<State> run(int N, int maxT, List<Particle> initialParticles)
+
+    List<Particle> createParticles(int N)
+    List<Particle> createParticles(int N, double vMax)
+    boolean checkSuperposition(List<Particle> particles, float x, float y, float r)
+
+    addParticleCollisions(Particle p1, List<Particle> particles, Queue<Collision> collisions)
+    addWallCollisions(Particle p, Queue<Collision> collisions)
+}
+
+Simulation o-- Particle
+Simulation o-- Collision
+Simulation o-- State
+
+
+@enduml
