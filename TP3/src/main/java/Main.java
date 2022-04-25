@@ -8,10 +8,11 @@ import java.util.Locale;
 public class Main {
 
     private static final String OUT_FILE_NAME = "stats.txt";
-    private static int N = 140;
-    private static int T = 1000;
+    private static int N = 100;
+    private static int T = 10;
 
     public static void main(String[] args) throws IOException {
+        Locale.setDefault(Locale.US);
 
         System.out.println("Running simulation...");
         Result result = Simulation.run(N, T, true);
