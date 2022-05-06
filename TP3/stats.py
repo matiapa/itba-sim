@@ -137,11 +137,11 @@ def punto_4():
     fig.tight_layout()
     plt.show()
 
-    plt.errorbar(x = [100, 110, 120, 130], y = [0.05, 0.02, 0.05, 0.05], yerr = [0.01, 0.004, 0.012, 0.017], fmt='o ', label='Particula grande')
-    plt.errorbar(x = [100, 110, 120, 130], y = [0.16, 0.12, 0.11, 0.09], yerr = [0.021, 0.014, 0.009, 0.02], fmt='o ', label='Particulas chicas')
-    plt.xlabel('Numero de particulas')
-    plt.ylabel('Coeficiente de difusion '+r'($\mathregular{m^2/s}$)')
-    plt.legend()
-    plt.show()
+    # plt.errorbar(x = [100, 110, 120, 130], y = [0.05, 0.02, 0.05, 0.05], yerr = [0.01, 0.004, 0.012, 0.017], fmt='o ', label='Particula grande')
+    # plt.errorbar(x = [100, 110, 120, 130], y = [0.16, 0.12, 0.11, 0.09], yerr = [0.021, 0.014, 0.009, 0.02], fmt='o ', label='Particulas chicas')
+    # plt.xlabel('Numero de particulas')
+    # plt.ylabel('Coeficiente de difusion '+r'($\mathregular{m^2/s}$)')
+    # plt.legend()
+    # plt.show()
 
 punto_4()

@@ -78,9 +78,9 @@ public class Statistics {
     public static void dcm() throws FileNotFoundException, UnsupportedEncodingException {
         int N = 130;
         int I = 100;
-        float T = (float) 10;
+        float T = (float) 0.6;
 
-        double dt = 0.3;
+        double dt = 0.024;
         ArrayList<Double>[] smallPartDCMs = new ArrayList[(int) (T/dt) + 1];
         ArrayList<Double>[] bigPartDCMs = new ArrayList[(int) (T/dt) + 1];
 
