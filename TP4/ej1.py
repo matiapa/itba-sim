@@ -67,6 +67,44 @@ def verlet():
     return r,v
 
 # ---------------------------------------------------------------
+#                   ALGORITMO DE BEEMAN
+# ---------------------------------------------------------------
+
+def beeman():
+    # Vectores de posicion y velocidad
+    r = np.arange(0, tf, dt).tolist()
+    v = np.arange(0, tf, dt).tolist()
+    
+    # Inicializamos el problema
+    r[0] = r0
+    v[0] = v0
+    step = 0
+    t = step*dt
+
+    while t < tf-dt:
+        a_t = f(r[step], v[step])/m
+        a_t_less_dt = f(r[step-1], v[step-1])/m if step>0 else f(r[0]-v[0]*dt, v[0])
+
+        # Obtenemos la proxima posicion
+        r[step+1] = r[step] + v[step]*dt + 2/3 * a_t * dt**2 - 1/6 * a_t_less_dt * dt**2
+
+        # Predecimos la proxima velocidad
+        vp = v[step] + 3/2 * a_t * dt - 1/2 * a_t_less_dt * dt
+
+        # Evaluamos la proxima aceleracion
+        a_t_plus_dt = f(r[step+1], vp)/m
+
+        # Corregimos la proxima velocidad
+        v[step+1] = v[step] + 1/3 * a_t_plus_dt * dt + 5/6 * a_t * dt - 1/6 * a_t_less_dt * dt
+
+        # Avanzamos el tiempo de la simulacion
+        step += 1
+        t = step*dt
+    
+    return r,v
+
+
+# ---------------------------------------------------------------
 #                   ALGORITMO DE GEAR ORDEN 5
 # ---------------------------------------------------------------
 
@@ -113,12 +151,14 @@ def gear():
 def compare():
     times = np.arange(0, tf, dt).tolist()
     # r_verlett, _ = verlet()
-    r_gear, _ = gear()
+    # r_gear, _ = gear()
+    r_beeman, _ = beeman()
     r_real = [A * exp(-t*gamma/(2*m)) * cos(sqrt(k/m - gamma**2/(4*m**2)) * t) for t in times]
 
     # pyplot.plot(times, r_verlett, label='Verlett')
-    pyplot.plot(times, r_gear, label='Gear')
-    # pyplot.plot(times, r_real, label='Analytic')
+    # pyplot.plot(times, r_gear, label='Gear')
+    pyplot.plot(times, r_beeman, label='Beeman')
+    pyplot.plot(times, r_real, label='Analytic')
     # pyplot.plot(times, [x-y for x,y in zip(r_sim,r_real)], label='Error')
     
     pyplot.legend()
