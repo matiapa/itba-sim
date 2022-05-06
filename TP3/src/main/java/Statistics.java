@@ -17,25 +17,35 @@ public class Statistics {
     public static void collisionTime() throws FileNotFoundException, UnsupportedEncodingException {
         int N = 110;
         int T = 100;
-        float M2 = 2.0f;
-
-        System.out.println("Writing output file...");
-        PrintWriter writer = new PrintWriter("big_particle.csv", String.valueOf(StandardCharsets.UTF_8));
-        writer.println("t,id,x,y,vx,vy");
 
         while (N < 150) {
+            System.out.println("Writing output file...");
+            PrintWriter writer = new PrintWriter("collision_time_"+N+".csv", String.valueOf(StandardCharsets.UTF_8));
 
+            Result result = Simulation.run(N, T, false);
+            writer.println(String.format("%d %g", result.getStates().size() - 1, result.getT())); // borrar el primer estado
+            writer.println("d");
+            result.getStates().removeIf(s -> s.collision == null);
+            result.getStates().forEach(state -> {
+                writer.printf("%g\n", state.collision.getTimeTaken());
+//                state.particles.forEach(p -> writer.printf("%g,%s,%g\n", state.t, p, state.collision.getTimeTaken()));
+            });
+
+            System.out.println("Finished writing sample for N: "+N);
+
+            N += 15;
+
+            writer.close();
         }
     }
 
 
     public static void bigParticle() throws FileNotFoundException, UnsupportedEncodingException {
 
-        int N = 140;
+        int N = 110;
         int T = 100;
-        float M2 = 2.0f;
-        float K;
         float increaseAmount = 0.2f;
+        Result result = null;
 
         double Vm = 1;
 
@@ -46,12 +56,16 @@ public class Statistics {
         writer.println("t,id,x,y,K");
 
         while (Vm <= 2) {
-            K = (float) (0.5 * M2 * Math.pow(Vm, 2));
             List<Particle> particlesClone = new ArrayList<>();
+
             particles.forEach(p -> particlesClone.add(new Particle(p.id, p.x, p.y, p.vx, p.vy, p.m, p.r)));
-            Result result = Simulation.run(N, T, new ArrayList<>(particlesClone),false);
+
+            System.out.println(particles.size());
+            float finalK = (float) particlesClone.stream().mapToDouble(p -> 0.5*p.m*Math.pow(Math.hypot(p.vx, p.vy), 2)).average().orElse(0);
+
+            result = Simulation.run(N, T, new ArrayList<>(particlesClone), Vm == 1 || Vm + increaseAmount > 2, "big_particle"+Math.round(Vm)+".csv");
             System.out.println("Finishes running...");
-            float finalK = K;
+
             result.getStates().forEach(state -> {
                 state.particles.stream().filter(p -> p.id == 0).forEach(p -> writer.printf("%g,%d,%g,%g,%g\n", state.t, p.id, p.x, p.y, finalK));
             });
@@ -68,8 +82,10 @@ public class Statistics {
                     p.vy += increaseAmount;
             });
             System.out.println(Vm);
+
             Vm += Math.sqrt(2*Math.pow(increaseAmount, 2));
         }
+
         writer.close();
 
     }

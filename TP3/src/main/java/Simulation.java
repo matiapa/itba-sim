@@ -11,27 +11,31 @@ public class Simulation {
     private static final float R1 = 0.2f, M1 = 0.9f;
     private static final float R2 = 0.7f, M2 = 2.0f;
     private static final float dT = 0.05f;
-    private static final Particle bigParticle = new Particle(0, (float) L/2, (float) L/2, 0, 0, M2, R2);
+    private static Particle bigParticle = new Particle(0, (float) L/2, (float) L/2, 0, 0, M2, R2);
 
     private static float t = 0;
-    private static float writeT = 0;
 
-    public static Result run(int N, float T, boolean writeState) throws FileNotFoundException, UnsupportedEncodingException {
-        return run(N, T, null, writeState);
+    public static Result run(int N, float T, boolean animate) throws FileNotFoundException, UnsupportedEncodingException {
+        return run(N, T, null, animate, "out.txt");
     }
 
-    public static Result run(int N, float T, List<Particle> initialParticles, boolean writeState) throws FileNotFoundException, UnsupportedEncodingException {
+    public static Result run(int N, float T, List<Particle> initialParticles, boolean animate, String fileName) throws FileNotFoundException, UnsupportedEncodingException {
         t = 0;
+        float writeT = 0;
+        bigParticle = new Particle(0, (float) L/2, (float) L/2, 0, 0, M2, R2);
         Queue<Collision> collisions = new PriorityQueue<>();
         List<State> states = new ArrayList<>();
 
         List<Particle> particles = initialParticles != null ? initialParticles : createParticles(N);
         saveState(states, particles, null);
 
-        PrintWriter writer = new PrintWriter("out.txt", String.valueOf(StandardCharsets.UTF_8));
-        writer.printf("%d %d %d %g", N, L, Vm, dT);
-        writeState(writer, particles);
-        writeT += dT;
+        PrintWriter writer = null;
+        if (animate) {
+            writer = new PrintWriter(fileName, String.valueOf(StandardCharsets.UTF_8));
+            writer.printf("%d %d %d %g", N, L, Vm, dT);
+            writeState(writer, particles);
+            writeT += dT;
+        }
 
         // Calculate initial collisions
         for(int i=0; i<particles.size()-1; i++)
@@ -68,7 +72,7 @@ public class Simulation {
             }
 
             // Save state to file
-            if (t >= writeT) {
+            if (t >= writeT && animate) {
                 writeT += dT;
                 writeState(writer, particles);
             }
@@ -94,7 +98,8 @@ public class Simulation {
                 saveState(states, particles, collision);
         }
 
-        writer.close();
+        if (writer != null)
+            writer.close();
         return new Result(t, states);
     }
 
@@ -113,6 +118,7 @@ public class Simulation {
             do {
                 x = (float) Math.random() * L;
                 y = (float) Math.random() * L;
+
                 superposition = checkSuperposition(particles, x, y, R1);
             } while(superposition);
 

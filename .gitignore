@@ -11,6 +11,9 @@ out/
 *.rar
 *.xyz
 *.txt
+*.csv
+*.png
+*.xyz
 
 # Intellij
 .idea/
