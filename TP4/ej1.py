@@ -26,43 +26,40 @@ v0 = -A*gamma/(2*m)
 f = lambda r,v : -k * r - gamma * v
 
 # ---------------------------------------------------------------
-#                   ALGORITMO DE VERLET ORIGINAL
+#                   ALGORITMO DE VERLETT
 # ---------------------------------------------------------------
 
-def verlet():
-    # Inicializacion de condiciones
+def verlett():
+    # Vectores de posicion y velocidad
     r = np.arange(0, tf, dt).tolist()
     v = np.arange(0, tf, dt).tolist()
-
+    
+    # Inicializamos el problema
     r[0] = r0
     v[0] = v0
     step = 0
+    t = step*dt
 
-    # Ejecutamos el primer paso
-    r_prev = r[0] - dt * v[0]
-    r[1] = 2*r[0] - r_prev + (step * dt)**2/m * f(r[0], v[0])
-
-    step += 1
-    t = step * dt
-
-    # Ejecutamos los demas pasos
     while t < tf-dt:
         # Calculamos la proxima posicion
-        r[step+1] = 2*r[step] - r[step-1] + t**2/m * f(r[step], v[step-1])
+        if step > 0:
+            r[step+1] = 2*r[step] - r[step-1] + t**2/m * f(r[step], v[step-1])
+        else:
+            r[step+1] = 2*r[step] - (r[0]-dt*v[0]) + t**2/m * f(r[step], v[0])
 
         # Calculamos la velocidad actual
         v[step] = (r[step+1] - r[step-1])/(2*dt)
 
-        print(f't: {t}')
-        print(f'r(t): {r[step]}')
-        print(f'v(t-1): {v[step-1]}')
-        print(f'f(t): {f(r[step], v[step-1])}')
-        print(f'r(t+1): {r[step+1]}')
-        print('--------------------------')
+        # print(f't: {t}')
+        # print(f'r(t): {r[step]}')
+        # print(f'v(t-1): {v[step-1]}')
+        # print(f'f(t): {f(r[step], v[step-1])}')
+        # print(f'r(t+1): {r[step+1]}')
+        # print('--------------------------')
 
-        # Avanzamos el tiempo
+        # Avanzamos el tiempo de la simulacion
         step += 1
-        t = step * dt
+        t = step*dt
 
     return r,v
 
@@ -105,7 +102,7 @@ def beeman():
 
 
 # ---------------------------------------------------------------
-#                   ALGORITMO DE GEAR ORDEN 5
+#                   ALGORITMO DE GEAR
 # ---------------------------------------------------------------
 
 def gear():
@@ -148,20 +145,78 @@ def gear():
     
     return r, r1
 
-def compare():
+def single_dt_analysis():
+    # Ejecucion de los algoritmos
+
     times = np.arange(0, tf, dt).tolist()
-    # r_verlett, _ = verlet()
-    # r_gear, _ = gear()
+    r_verlett, _ = verlett()
+    r_gear, _ = gear()
     r_beeman, _ = beeman()
     r_real = [A * exp(-t*gamma/(2*m)) * cos(sqrt(k/m - gamma**2/(4*m**2)) * t) for t in times]
 
+    # Errores cuadraticos medios
+
+    # print('ECM Verlett', sum([(x-y)**2 for x,y in zip(r_verlett, r_real)]) / (tf/dt))
+    # print('ECM Beeman', sum([(x-y)**2 for x,y in zip(r_beeman, r_real)]) / (tf/dt))
+    # print('ECM Gear', sum([(x-y)**2 for x,y in zip(r_gear, r_real)]) / (tf/dt))
+
+    # Graficos de las posiciones
+
     # pyplot.plot(times, r_verlett, label='Verlett')
+    # pyplot.plot(times, r_beeman, label='Beeman')
     # pyplot.plot(times, r_gear, label='Gear')
-    pyplot.plot(times, r_beeman, label='Beeman')
-    pyplot.plot(times, r_real, label='Analytic')
-    # pyplot.plot(times, [x-y for x,y in zip(r_sim,r_real)], label='Error')
-    
+    # pyplot.plot(times, r_real, label='Analitico')
+    # pyplot.xlabel('t (s)')
+    # pyplot.ylabel('r (m)')
+
+    # Grafico de los errores de las posiciones
+
+    # pyplot.plot(times, [x-y for x,y in zip(r_verlett, r_real)], label='Verlett')
+    # pyplot.plot(times, [x-y for x,y in zip(r_beeman, r_real)], label='Beeman')
+    # pyplot.plot(times, [x-y for x,y in zip(r_gear, r_real)], label='Gear')
+    # pyplot.legend()
+    # pyplot.xlabel('t (s)')
+    # pyplot.ylabel('Error de r (m)')
+
+
+def multi_dt_analysis():
+    global dt
+
+    # Grafico de los ECM vs dt
+    dts = [1e-2, 5e-2, 1e-3, 5e-3, 1e-4, 5e-4, 1e-5]
+    verlett_ecms = []
+    beeman_ecms = []
+    gear_ecms = []
+
+    for _dt in dts:
+        dt = _dt
+
+        # Ejecucion de los algoritmos
+
+        times = np.arange(0, tf, dt).tolist()
+        # r_verlett, _ = verlett()
+        # r_beeman, _ = beeman()
+        r_gear, _ = gear()
+        r_real = [A * exp(-t*gamma/(2*m)) * cos(sqrt(k/m - gamma**2/(4*m**2)) * t) for t in times]
+
+        # Errores cuadraticos medios
+
+        # verlett_ecms.append(sum([(x-y)**2 for x,y in zip(r_verlett, r_real)]) / (tf/dt))
+        # beeman_ecms.append(sum([(x-y)**2 for x,y in zip(r_beeman, r_real)]) / (tf/dt))
+        gear_ecms.append(sum([(x-y)**2 for x,y in zip(r_gear, r_real)]) / (tf/dt))
+
+        print('DT', dt)
+
+    # pyplot.plot(dts, verlett_ecms, label='Verlett')
+    # pyplot.plot(dts, beeman_ecms, label='Beeman')
+    pyplot.scatter(dts, gear_ecms, label='Gear')
+
+    pyplot.xlabel('dt (s)')
+    pyplot.ylabel('ECM ' + r'($\mathregular{m^2}$)')
+    pyplot.xscale('log')
+    pyplot.yscale('log')
     pyplot.legend()
+
     pyplot.show()
 
-compare()
+multi_dt_analysis()
