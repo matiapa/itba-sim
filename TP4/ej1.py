@@ -1,4 +1,3 @@
-from cProfile import label
 from math import exp, cos, sqrt
 from matplotlib import pyplot
 import numpy as np
