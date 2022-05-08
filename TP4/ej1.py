@@ -1,5 +1,6 @@
 from math import exp, cos, sqrt
 from matplotlib import pyplot
+from scipy.stats import skew, linregress
 import numpy as np
 
 # ---------------------------------------------------------------
@@ -13,7 +14,7 @@ log_step = 5
 # Caracteristicas
 tf = 5e5*dt
 m = 70
-k = pow(10,4)
+k = 10000
 gamma = 100
 A = 1
 
@@ -28,6 +29,7 @@ f = lambda r,v : -k * r - gamma * v
 #                   ALGORITMO DE VERLETT
 # ---------------------------------------------------------------
 
+
 def verlett():
     # Vectores de posicion y velocidad
     r = np.arange(0, tf, dt).tolist()
@@ -37,24 +39,20 @@ def verlett():
     r[0] = r0
     v[0] = v0
     step = 0
+
+    # Se evalua la velocidad inicial y la posición inicial
+    v[1] = v[0] + dt*f(r[0], v[0])/m
+    r[1] = r[0] + dt*v[1] + (dt**2)*f(r[0], v[0])/(2*m)
+
+    step += 1
     t = step*dt
 
     while t < tf-dt:
-        # Calculamos la proxima posicion
-        if step > 0:
-            r[step+1] = 2*r[step] - r[step-1] + t**2/m * f(r[step], v[step-1])
-        else:
-            r[step+1] = 2*r[step] - (r[0]-dt*v[0]) + t**2/m * f(r[step], v[0])
+        # Obtenemos la próxima posición
+        r[step+1] = 2 * r[step] - r[step-1] + dt**2 * f(r[step], v[step])/m
 
-        # Calculamos la velocidad actual
-        v[step] = (r[step+1] - r[step-1])/(2*dt)
-
-        # print(f't: {t}')
-        # print(f'r(t): {r[step]}')
-        # print(f'v(t-1): {v[step-1]}')
-        # print(f'f(t): {f(r[step], v[step-1])}')
-        # print(f'r(t+1): {r[step+1]}')
-        # print('--------------------------')
+        # Obtenemos la próxima velocidad
+        v[step+1] = (r[step+1]-r[step-1])/(2*dt)
 
         # Avanzamos el tiempo de la simulacion
         step += 1
@@ -155,27 +153,30 @@ def single_dt_analysis():
 
     # Errores cuadraticos medios
 
-    # print('ECM Verlett', sum([(x-y)**2 for x,y in zip(r_verlett, r_real)]) / (tf/dt))
-    # print('ECM Beeman', sum([(x-y)**2 for x,y in zip(r_beeman, r_real)]) / (tf/dt))
-    # print('ECM Gear', sum([(x-y)**2 for x,y in zip(r_gear, r_real)]) / (tf/dt))
+    print('ECM Verlett', sum([(x-y)**2 for x,y in zip(r_verlett, r_real)]) / (tf/dt))
+    print('ECM Beeman', sum([(x-y)**2 for x,y in zip(r_beeman, r_real)]) / (tf/dt))
+    print('ECM Gear', sum([(x-y)**2 for x,y in zip(r_gear, r_real)]) / (tf/dt))
 
     # Graficos de las posiciones
 
-    # pyplot.plot(times, r_verlett, label='Verlett')
-    # pyplot.plot(times, r_beeman, label='Beeman')
-    # pyplot.plot(times, r_gear, label='Gear')
-    # pyplot.plot(times, r_real, label='Analitico')
-    # pyplot.xlabel('t (s)')
-    # pyplot.ylabel('r (m)')
+    pyplot.plot(times, r_verlett, label='Verlett')
+    pyplot.plot(times, r_beeman, label='Beeman')
+    pyplot.plot(times, r_gear, label='Gear')
+    pyplot.plot(times, r_real, label='Analitico')
+    pyplot.xlabel('t (s)')
+    pyplot.ylabel('r (m)')
+    pyplot.legend(loc='best')
+    pyplot.show()
 
     # Grafico de los errores de las posiciones
 
-    # pyplot.plot(times, [x-y for x,y in zip(r_verlett, r_real)], label='Verlett')
-    # pyplot.plot(times, [x-y for x,y in zip(r_beeman, r_real)], label='Beeman')
-    # pyplot.plot(times, [x-y for x,y in zip(r_gear, r_real)], label='Gear')
-    # pyplot.legend()
-    # pyplot.xlabel('t (s)')
-    # pyplot.ylabel('Error de r (m)')
+    pyplot.plot(times, [x-y for x,y in zip(r_verlett, r_real)], label='Verlett')
+    pyplot.plot(times, [x-y for x,y in zip(r_beeman, r_real)], label='Beeman')
+    pyplot.plot(times, [x-y for x,y in zip(r_gear, r_real)], label='Gear')
+    pyplot.legend()
+    pyplot.xlabel('t (s)')
+    pyplot.ylabel('Error de r (m)')
+    pyplot.show()
 
 
 def multi_dt_analysis():
@@ -193,22 +194,22 @@ def multi_dt_analysis():
         # Ejecucion de los algoritmos
 
         times = np.arange(0, tf, dt).tolist()
-        # r_verlett, _ = verlett()
-        # r_beeman, _ = beeman()
+        r_verlett, _ = verlett()
+        r_beeman, _ = beeman()
         r_gear, _ = gear()
         r_real = [A * exp(-t*gamma/(2*m)) * cos(sqrt(k/m - gamma**2/(4*m**2)) * t) for t in times]
 
         # Errores cuadraticos medios
 
-        # verlett_ecms.append(sum([(x-y)**2 for x,y in zip(r_verlett, r_real)]) / (tf/dt))
-        # beeman_ecms.append(sum([(x-y)**2 for x,y in zip(r_beeman, r_real)]) / (tf/dt))
+        verlett_ecms.append(sum([(x-y)**2 for x,y in zip(r_verlett, r_real)]) / (tf/dt))
+        beeman_ecms.append(sum([(x-y)**2 for x,y in zip(r_beeman, r_real)]) / (tf/dt))
         gear_ecms.append(sum([(x-y)**2 for x,y in zip(r_gear, r_real)]) / (tf/dt))
 
         print('DT', dt)
 
-    # pyplot.plot(dts, verlett_ecms, label='Verlett')
-    # pyplot.plot(dts, beeman_ecms, label='Beeman')
-    pyplot.scatter(dts, gear_ecms, label='Gear')
+    pyplot.scatter(dts, verlett_ecms, label='Verlett', marker='o')
+    pyplot.scatter(dts, beeman_ecms, label='Beeman', marker='o')
+    pyplot.scatter(dts, gear_ecms, label='Gear', marker='o')
 
     pyplot.xlabel('dt (s)')
     pyplot.ylabel('ECM ' + r'($\mathregular{m^2}$)')
@@ -218,4 +219,5 @@ def multi_dt_analysis():
 
     pyplot.show()
 
+single_dt_analysis()
 multi_dt_analysis()
