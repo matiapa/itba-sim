@@ -1,5 +1,5 @@
 from math import ceil, exp, cos, hypot, sqrt
-from matplotlib import pyplot
+from matplotlib import animation, pyplot
 import numpy as np
 
 # ---------------------------------------------------------------
@@ -7,8 +7,9 @@ import numpy as np
 # ---------------------------------------------------------------
 
 # Parametros de la simulacion
-dt = 1e-12
+dt = 1e-13
 tf = 1e3*dt
+log_step = 1
 
 # Parametros del sistema
 N = 16**2
@@ -19,16 +20,16 @@ k = 1e10
 L = (sqrt(N)-1)*D
 
 # Condiciones iniciales
-v0 = np.array([5e3, 0])
-r0 = np.array([-D, L/2])
+v0 = np.array([10e3, 0])
+r0 = np.array([0, L/2])
 
 # Expresion de la fuerza
-def f(r, v):
+def f(ri, v):
     qsign = 1
     force = np.array([0.0,0.0])
-    for px in np.arange(0, L+D, D):
-        for py in np.arange(0, L+D, D):
-            rij = [px,py] - r
+    for px in np.linspace(D, L+D, int(sqrt(N)), endpoint=True):
+        for py in np.linspace(0, L, int(sqrt(N)), endpoint=True):
+            rij = ri - [px, py]
             rij_norm = np.linalg.norm(rij)
 
             if rij_norm < 0.01*D:
@@ -42,8 +43,8 @@ def f(r, v):
 # Expresion de la energia potencial
 def potential_energy(r):
     qsign, u = 1, 0
-    for px in np.arange(0, L+D, D):
-        for py in np.arange(0, L+D, D):
+    for px in np.linspace(D, L+D, int(sqrt(N)), endpoint=True):
+        for py in np.linspace(0, L, int(sqrt(N)), endpoint=True):
             u += k * Q**2 * qsign / hypot(px-r[0], py-r[1])
             qsign *= -1
         qsign *= -1
@@ -57,15 +58,16 @@ def should_stop(r, step):
         return True
 
     r_t = r[step-1]
-    was_inside_grid = r_t[0]>0 and r_t[0]<L and r_t[1]>0 and r_t[1]<L
+    was_inside_grid = r_t[0]>D and r_t[0]<L+D and r_t[1]>0 and r_t[1]<L
     
     r_t = r[step]
-    is_inside_grid = r_t[0]>0 and r_t[0]<L and r_t[1]>0 and r_t[1]<L
+    is_inside_grid = r_t[0]>D and r_t[0]<L+D and r_t[1]>0 and r_t[1]<L
 
     if was_inside_grid and not is_inside_grid:
         print('Cut condition activated')
 
     return was_inside_grid and not is_inside_grid
+
 
 def verlett():
     # Inicializamos el problema
@@ -82,8 +84,9 @@ def verlett():
     step = 1
     t = step*dt
 
-    while t < tf-dt:
-        print(f'{step} - R: {r[step]} - V: {v[step]} - F: {f(r[step], v[step])}')
+    while not should_stop(r, step):
+        if step % log_step == 0:
+            print(f'{step} - R: {r[step]} - V: {v[step]} - F: {f(r[step], v[step])}')
 
         # Obtenemos la próxima posición
         r.append( 2 * r[step] - r[step-1] + dt**2 * f(r[step], v[step])/M )
@@ -97,58 +100,84 @@ def verlett():
 
     return r,v
 
-def beeman():
-    # Inicializamos el problema
-    r = [r0]
-    v = [v0]
-    step = 0
-    t = step*dt
-
-    while not should_stop(r, step):
-        a_t = f(r[step], v[step])/M
-        a_t_less_dt = f(r[step-1], v[step-1])/M if step>0 else f(r[0]-v[0]*dt, v[0])
-
-        # Obtenemos la proxima posicion
-        r.append( r[step] + v[step]*dt + 2/3 * a_t * dt**2 - 1/6 * a_t_less_dt * dt**2 )
-
-        # Predecimos la proxima velocidad
-        vp = v[step] + 3/2 * a_t * dt - 1/2 * a_t_less_dt * dt
-
-        # Evaluamos la proxima aceleracion
-        a_t_plus_dt = f(r[step+1], vp)/M
-
-        # Corregimos la proxima velocidad
-        v.append( v[step] + 1/3 * a_t_plus_dt * dt + 5/6 * a_t * dt - 1/6 * a_t_less_dt * dt )
-
-        # Avanzamos el tiempo de la simulacion
-        step += 1
-        t = step*dt
-    
-    return r,v
 
 def energy_check():
     rs, vs = verlett()
 
-    ups, uks, u = [], [], None
+    up, uk, maxdiff = [], [], 0
     for i in range(len(rs)):
         r, v = rs[i], vs[i]
-        up = potential_energy(r)
-        uk = 0.5 * M * (v[0]**2+v[1]**2)
-        ups.append(up)
-        uks.append(uk)
-        
-        if u!=None and up+uk-u>1e-18:
-            return False
-        u = up+uk
+        up.append( potential_energy(r) )
+        uk.append( 0.5 * M * (v[0]**2+v[1]**2) )
+        maxdiff = max(maxdiff, abs(up[-1]+uk[-1] - (up[0]+uk[0])))
+    print(f'Max energy variation: {maxdiff/(up[0]+uk[0])*100}%')
     
-    times = np.arange(0, len(rs)*dt, dt)
-    pyplot.plot(times, ups, label='Potential')
-    pyplot.plot(times, uks, label='Kinetic')
-    # pyplot.plot(times, np.array(ups)+np.array(uks), label='Total')
+    times = np.arange(0, len(rs), 1) * dt
+    # pyplot.plot(times, up, label='Potential')
+    # pyplot.plot(times, uk, label='Kinetic')
+    pyplot.plot(times, np.array(up)+np.array(uk), label='Total')
 
+    pyplot.yscale('log')
     pyplot.legend()
     pyplot.show()
+
+
+def plot_force():
+    ex, ey, fx, fy = [], [], [], []
+    for x in np.arange(0, L+D, D/4):
+        for y in np.arange(0, L, D/4):
+            print(x,y)
+            if x%D != 0 or y%D !=0:
+                ex.append(x)
+                ey.append(y)
+                force = f(np.array([x,y]), None)
+                force /= np.linalg.norm(force)
+                fx.append(force[0])
+                fy.append(force[1])
+        # print(x,y,force[0],force[1])
     
-    return True
-    
-print(energy_check())
+    px, py, c = [], [], []
+    qsign = 1
+    for x in np.linspace(D, L+D, int(sqrt(N)), endpoint=True):
+        for y in np.linspace(0, L, int(sqrt(N)), endpoint=True):
+            px.append(x)
+            py.append(y)
+            c.append('r' if qsign==1 else 'b')
+            qsign *= -1
+        qsign *= -1
+
+    pyplot.quiver(ex, ey, fx, fy)
+    pyplot.scatter(px, py, c=c)
+    pyplot.show()
+
+
+def update_plot(i, rs, scat):
+    scat.set_offsets([[rs[i][0], rs[i][1]]])
+    return scat
+
+def animate():
+    rs, vs = verlett()
+
+    x, y, c = [], [], []
+    qsign = 1
+    for px in np.linspace(D, L+D, int(sqrt(N)), endpoint=True):
+        for py in np.linspace(0, L, int(sqrt(N)), endpoint=True):
+            x.append(px)
+            y.append(py)
+            c.append('r' if qsign==1 else 'b')
+            qsign *= -1
+        qsign *= -1
+
+    fig = pyplot.figure()
+    pyplot.scatter(x, y, c=c)
+    scat = pyplot.scatter([rs[0][0]], [rs[0][1]], c=['g'])
+
+    ani = animation.FuncAnimation(fig, update_plot, frames=range(len(rs)), fargs=(rs, scat))
+    pyplot.show()
+
+    ani.save('out/animation.gif')
+
+
+# plot_force()
+# energy_check()
+animate()
