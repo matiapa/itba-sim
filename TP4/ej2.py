@@ -7,9 +7,8 @@ import numpy as np
 # ---------------------------------------------------------------
 
 # Parametros de la simulacion
-dt = 1e-5
-log_step = 5
-tf = 5e5*dt
+dt = 1e-12
+tf = 1e3*dt
 
 # Parametros del sistema
 N = 16**2
@@ -26,13 +25,16 @@ r0 = np.array([-D, L/2])
 # Expresion de la fuerza
 def f(r, v):
     qsign = 1
-    force = np.array([0,0])
+    force = np.array([0.0,0.0])
     for px in np.arange(0, L+D, D):
         for py in np.arange(0, L+D, D):
-            if hypot(px-r[0], py-r[1]) < 0.01*D:
+            rij = [px,py] - r
+            rij_norm = np.linalg.norm(rij)
+
+            if rij_norm < 0.01*D:
                 raise Exception('Particle absorbed')
-            force[0] += k * Q**2 * qsign / (px-r[0])**2 * np.sign(r[0]-px)
-            force[1] += k * Q**2 * qsign / (py-r[1])**2 * np.sign(r[1]-py)
+
+            force += k * Q**2 * (qsign / rij_norm**2) * rij/rij_norm
             qsign *= -1
         qsign *= -1
     return force
@@ -60,8 +62,40 @@ def should_stop(r, step):
     r_t = r[step]
     is_inside_grid = r_t[0]>0 and r_t[0]<L and r_t[1]>0 and r_t[1]<L
 
+    if was_inside_grid and not is_inside_grid:
+        print('Cut condition activated')
+
     return was_inside_grid and not is_inside_grid
 
+def verlett():
+    # Inicializamos el problema
+    r = [r0]
+    v = [v0]
+    step = 0
+
+    print(f'{step} - R: {r[step]} - V: {v[step]} - F: {f(r[step], v[step])}')
+
+    # Se evalua la velocidad inicial y la posición inicial
+    v.append( v[0] + dt*f(r[0], v[0])/M )
+    r.append( r[0] + dt*v[1] + (dt**2)*f(r[0], v[0])/(2*M) )
+
+    step = 1
+    t = step*dt
+
+    while t < tf-dt:
+        print(f'{step} - R: {r[step]} - V: {v[step]} - F: {f(r[step], v[step])}')
+
+        # Obtenemos la próxima posición
+        r.append( 2 * r[step] - r[step-1] + dt**2 * f(r[step], v[step])/M )
+
+        # Obtenemos la próxima velocidad
+        v.append( (r[step+1]-r[step-1])/(2*dt) )
+
+        # Avanzamos el tiempo de la simulacion
+        step += 1
+        t = step*dt
+
+    return r,v
 
 def beeman():
     # Inicializamos el problema
@@ -93,7 +127,7 @@ def beeman():
     return r,v
 
 def energy_check():
-    rs, vs = beeman()
+    rs, vs = verlett()
 
     ups, uks, u = [], [], None
     for i in range(len(rs)):
@@ -117,4 +151,4 @@ def energy_check():
     
     return True
     
-# print(energy_check())
+print(energy_check())
