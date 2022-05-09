@@ -1,6 +1,7 @@
 from math import ceil, exp, cos, hypot, sqrt
 from matplotlib import animation, pyplot
 import numpy as np
+import math
 
 # ---------------------------------------------------------------
 #                   CONDICIONES DEL PROBLEMA
@@ -97,6 +98,23 @@ def verlett():
         # Avanzamos el tiempo de la simulacion
         step += 1
         t = step*dt
+    
+
+    with open('verlett.xyz', 'w') as file:
+        for i in range(len(r)):
+            file.write(f'{N+4+1}\n\n')
+            file.write('0 0 0 1e-15 255 255 255\n')
+            file.write('0 0 {} 1e-15 255 255 255\n'.format(L))
+            file.write('0 {} 0 1e-15 255 255 255\n'.format(L))
+            file.write('0 {} {} 1e-15 255 255 255\n'.format(L, L))
+            
+            color = 0
+            for j in range(N):
+                x = (j%16)*D + D
+                y = (math.floor(j/16))*D
+                file.write('{} {} {} 2e-9 {} 0 0\n'.format(j+1, x, y, (j+1+math.floor(j/16))%2))
+            
+            file.write('{} {} {} 2e-9 0 1 0\n'.format(N+1, r[i][0], r[i][1]))
 
     return r,v
 
@@ -180,4 +198,5 @@ def animate():
 
 # plot_force()
 # energy_check()
-animate()
+# animate()
+verlett()
