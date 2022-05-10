@@ -71,9 +71,18 @@ def should_stop(r, step):
     # Check if particle is inside valid coordinates
 
     r_t = r[step]
-    if r_t[0]<0 or r_t[0]>L or r_t[1]<0 or r_t[1]>L:
-        stop_reason = 'grid_left'
-        return True
+    if r_t[0]<0: 
+      stop_reason = 'exited_left'
+      return True
+    elif r_t[0]>L: 
+      stop_reason = 'exited_right'
+      return True
+    elif r_t[1]<0: 
+      stop_reason = 'exited_top'
+      return True
+    elif r_t[1]>L:
+      stop_reason = 'exited_bottom'
+      return True
 
     # Check if particle left the grid after entering
 
@@ -83,13 +92,14 @@ def should_stop(r, step):
     r_t = r[step]
     is_inside_grid = r_t[0]>D and r_t[0]<L+D and r_t[1]>0 and r_t[1]<L
 
+    # check this for 2.3 (wip)
     if was_inside_grid and not is_inside_grid:
-        stop_reason = 'grid_left'
+        stop_reason = 'particle_exited'
         return True
 
 
 def verlett():
-    global stop_reason
+    global stop_reason, absorbed, exited, left, right, top, bottom
 
     # Inicializamos el problema
     r = [r0]
@@ -124,8 +134,29 @@ def verlett():
             step += 1
             t = step*dt
     except Exception:
-        stop_reason = 'absortion'
+        stop_reason = 'particle_absorbed'
         pass
+
+    absorbed = 0
+    exited = 0
+
+    left = 0
+    right = 0
+    top = 0
+    bottom = 0
+
+    if 'particle_absorbed' == stop_reason:
+        absorbed += 1
+    else:
+        exited += 1
+        if "exited_left" == stop_reason:
+            left += 1
+        if "exited_right" == stop_reason:
+            right += 1
+        if "exited_top" == stop_reason:
+            top += 1
+        if "exited_bottom" == stop_reason:
+            bottom += 1
 
     if write_ovito:
         with open('verlett.xyz', 'w') as file:
@@ -263,16 +294,33 @@ def trajectory_plot():
     global stop_reason, v0, r0
 
     lengths = []
+    p_abs = []
+    p_ext = []
+    p_left = []
+    p_right = []
+    p_top = []
+    p_bottom = []
 
     for _v0 in [5e-3, 5e-4]:
         for _y in [L/2, L/2+D/2]:
             v0 = _v0
             r0 = _y
-            r,v = verlett()            
+            r,v = verlett()
 
-            # if stop_reason == 'absortion':
+            p_abs.append(absorbed / N)
+            p_ext.append(exited / N)
+            p_left.append(left / exited)
+            p_right.append(right / exited)
+            p_top.append(top / exited)
+            p_bottom.append(bottom / exited)
+
+            pyplot.scatter(v0, [p_abs, p_ext, p_left, p_right, p_top, p_bottom])
+    
+    pyplot.show()
+            # if stop_reason == 'particle_absorbed':
             #     lengths[-1] 
 
 # energy_check()
 # animate()
-energy_plot()
+# energy_plot()
+trajectory_plot()
