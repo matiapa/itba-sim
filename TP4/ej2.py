@@ -9,7 +9,7 @@ import math
 
 # Parametros de la simulacion
 dt = 1e-14
-tf = 1.5e-12
+tf = 2e-12
 log_step = 1
 write_ovito = False
 
@@ -24,6 +24,8 @@ L = (sqrt(N)-1)*D
 # Condiciones iniciales
 v0 = np.array([10e4, 0])
 r0 = np.array([0, L/2 + D/3])
+
+stop_reason = ''
 
 # ---------------------------------------------------------------
 #                         SIMULACION
@@ -58,16 +60,19 @@ def potential_energy(r):
 
 
 def should_stop(r, step):
+    global stop_reason
     if step == 0:
         return False
 
     if step*dt > tf:
+        stop_reason = 'timeout'
         return True
     
     # Check if particle is inside valid coordinates
 
     r_t = r[step]
     if r_t[0]<0 or r_t[0]>L or r_t[1]<0 or r_t[1]>L:
+        stop_reason = 'grid_left'
         return True
 
     # Check if particle left the grid after entering
@@ -79,10 +84,13 @@ def should_stop(r, step):
     is_inside_grid = r_t[0]>D and r_t[0]<L+D and r_t[1]>0 and r_t[1]<L
 
     if was_inside_grid and not is_inside_grid:
+        stop_reason = 'grid_left'
         return True
 
 
 def verlett():
+    global stop_reason
+
     # Inicializamos el problema
     r = [r0]
     v = [v0]
@@ -116,6 +124,7 @@ def verlett():
             step += 1
             t = step*dt
     except Exception:
+        stop_reason = 'absortion'
         pass
 
     if write_ovito:
@@ -160,35 +169,6 @@ def energy_check():
     pyplot.show()
 
 
-def energy_plot():
-    global r0, dt
-
-    for _dt in [1e-13, 1e-14, 1e-15]:
-        u_dt = []
-        # for y in [L/2]:
-        for y in np.linspace(L/2-D, L/2+D, 5, True):
-            r0 = np.array([0, y])
-            dt = _dt
-
-            print(f'Running dt={dt}, y={y}')
-            rs, vs = verlett()
-
-            u0 = potential_energy(rs[0]) + 0.5 * M * (vs[0][0]**2+vs[0][1]**2)
-
-            for i in range(len(rs)):
-                r, v = rs[i], vs[i]
-                if len(u_dt)<=i:
-                    u_dt.append(0)
-                u_dt[i] += abs(potential_energy(r) + 0.5 * M * (v[0]**2+v[1]**2) - u0) * 100 / (u0 * len(rs))
-        
-        times = np.arange(0, len(rs), 1)*dt
-        pyplot.plot(times, u_dt, label=f'dt={dt}')
-    
-    pyplot.yscale('log')
-    pyplot.legend()
-    pyplot.show()
-
-
 def plot_force():
     ex, ey, fx, fy = [], [], [], []
     for x in np.arange(0, L+D, D/4):
@@ -221,6 +201,7 @@ def update_plot(i, rs, scat):
     scat.set_offsets([[rs[i][0], rs[i][1]]])
     return scat
 
+
 def animate():
     rs, vs = verlett()
 
@@ -244,6 +225,54 @@ def animate():
     ani.save('out/animation.gif', fps=4*(1e-13/dt))
 
 
+# ---------------------------------------------------------------
+#                         GRAFICOS
+# ---------------------------------------------------------------
+
+def energy_plot():
+    global r0, dt
+
+    for _dt in [0.5e-12, 1e-13, 1e-14, 1e-15]:
+        u_dt = []
+        for y in [L/2]:
+        # for y in np.linspace(L/2-D, L/2+D, 5, True):
+            r0 = np.array([0, y])
+            dt = _dt
+
+            print(f'Running dt={dt}, y={y}')
+            rs, vs = verlett()
+
+            u0 = potential_energy(rs[0]) + 0.5 * M * (vs[0][0]**2+vs[0][1]**2)
+
+            for i in range(len(rs)):
+                r, v = rs[i], vs[i]
+                if len(u_dt)<=i:
+                    u_dt.append(0)
+                u_dt[i] += abs(potential_energy(r) + 0.5 * M * (v[0]**2+v[1]**2) - u0) * 100 / (u0 * len(rs))
+        
+        times = np.arange(0, len(rs), 1)*dt
+        pyplot.plot(times, u_dt, label=f'dt={dt}')
+    
+    pyplot.xlabel('Tiempo (s)')
+    pyplot.ylabel('Variacion de Et (%)')
+    pyplot.yscale('log')
+    pyplot.legend()
+    pyplot.show()
+
+def trajectory_plot():
+    global stop_reason, v0, r0
+
+    lengths = []
+
+    for _v0 in [5e-3, 5e-4]:
+        for _y in [L/2, L/2+D/2]:
+            v0 = _v0
+            r0 = _y
+            r,v = verlett()            
+
+            # if stop_reason == 'absortion':
+            #     lengths[-1] 
+
 # energy_check()
 # animate()
-# energy_plot()
+energy_plot()
