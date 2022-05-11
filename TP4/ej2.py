@@ -2,6 +2,7 @@ from math import ceil, exp, cos, hypot, sqrt
 from matplotlib import animation, pyplot
 import numpy as np
 import math
+import random
 
 # ---------------------------------------------------------------
 #                   CONDICIONES DEL PROBLEMA
@@ -11,7 +12,6 @@ import math
 dt = 1e-14
 tf = 2e-12
 log_step = 1
-write_ovito = False
 
 # Parametros del sistema
 N = 16**2
@@ -64,9 +64,9 @@ def should_stop(r, step):
     if step == 0:
         return False
 
-    if step*dt > tf:
-        stop_reason = 'timeout'
-        return True
+    # if step*dt > tf:
+    #     stop_reason = 'timeout'
+    #     return True
     
     # Check if particle is inside valid coordinates
 
@@ -98,7 +98,7 @@ def should_stop(r, step):
         return True
 
 
-def verlett():
+def verlett(v0, r0, animate=False):
     global stop_reason, absorbed, exited, left, right, top, bottom
 
     # Inicializamos el problema
@@ -106,7 +106,7 @@ def verlett():
     v = [v0]
     step = 0
 
-    print(f'{step} - R: {r[step]} - V: {v[step]} - F: {f(r[step], v[step])}')
+    # print(f'{step} - R: {r[step]} - V: {v[step]} - F: {f(r[step], v[step])}')
 
     # Se evalua la velocidad inicial y la posición inicial
     v.append( v[0] + dt*f(r[0], v[0])/M )
@@ -158,7 +158,9 @@ def verlett():
         if "exited_bottom" == stop_reason:
             bottom += 1
 
-    if write_ovito:
+    
+
+    if animate:
         with open('verlett.xyz', 'w') as file:
             for i in range(len(r)):
                 file.write(f'{N+4+1}\n\n')
@@ -182,7 +184,7 @@ def verlett():
 # ---------------------------------------------------------------
 
 def energy_check():
-    rs, vs = verlett()
+    rs, vs = verlett(v0, r0)
 
     up, uk, maxdiff = [], [], 0
     for i in range(len(rs)):
@@ -234,7 +236,7 @@ def update_plot(i, rs, scat):
 
 
 def animate():
-    rs, vs = verlett()
+    rs, vs = verlett(v0, r0)
 
     x, y, c = [], [], []
     qsign = 1
@@ -271,7 +273,7 @@ def energy_plot():
             dt = _dt
 
             print(f'Running dt={dt}, y={y}')
-            rs, vs = verlett()
+            rs, vs = verlett(v0, r0)
 
             u0 = potential_energy(rs[0]) + 0.5 * M * (vs[0][0]**2+vs[0][1]**2)
 
@@ -305,7 +307,7 @@ def trajectory_plot():
         for _y in [L/2, L/2+D/2]:
             v0 = _v0
             r0 = _y
-            r,v = verlett()
+            r,v = verlett(v0, r0)
 
             p_abs.append(absorbed / N)
             p_ext.append(exited / N)
@@ -320,7 +322,42 @@ def trajectory_plot():
             # if stop_reason == 'particle_absorbed':
             #     lengths[-1] 
 
+
+def ej2_2():
+    y_values = [random.uniform(0, L) for _ in range(50)]
+    v_values = [5e3+11250*i for i in range(5)]
+    avg_long = list()
+    std = list()
+
+    for v_value in v_values:
+        trajectories = list()
+        for y_value in y_values:
+            r, v = verlett(np.array([v_value, 0]), np.array([0, y_value]), False)
+
+            # calculo la longitud de la trayectoria de la particula
+            aux = 0
+            for i in range(len(r)):
+                if i == 0:
+                    continue
+                aux += math.dist([r[i-1][0], r[i-1][1]], [r[i][0], r[i][1]])
+            trajectories.append(aux)
+
+        # obtengo el promedio de la longitud de las trayectorias
+        avg_long.append(np.mean(trajectories))
+
+        std.append(np.std(trajectories))
+
+    print(std)
+    
+    # plot graph with standard deviation bars for trajectories
+    pyplot.errorbar(v_values, avg_long, yerr=std, fmt='o')
+    pyplot.ticklabel_format(style='sci', axis='x', scilimits=(0,0))
+    pyplot.xlabel('Velocidad (m/s)')
+    pyplot.ylabel('Longitud de trayectoria (m)')
+    pyplot.show()
+
 # energy_check()
 # animate()
 # energy_plot()
-trajectory_plot()
+# trajectory_plot()
+ej2_2()
