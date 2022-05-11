@@ -8,8 +8,9 @@ import math
 # ---------------------------------------------------------------
 
 # Parametros de la simulacion
-dt = 1e-14
-tf = 2e-12
+dt = 1e-13
+# tf = 2e-12
+tf = np.Infinity
 log_step = 1
 write_ovito = False
 
@@ -22,8 +23,8 @@ k = 1e10
 L = (sqrt(N)-1)*D
 
 # Condiciones iniciales
-v0 = np.array([10e4, 0])
-r0 = np.array([0, L/2 + D/3])
+v0 = np.array([5e3, 0])
+r0 = np.array([0, L/3])
 
 stop_reason = ''
 
@@ -92,9 +93,8 @@ def should_stop(r, step):
     r_t = r[step]
     is_inside_grid = r_t[0]>D and r_t[0]<L+D and r_t[1]>0 and r_t[1]<L
 
-    # check this for 2.3 (wip)
     if was_inside_grid and not is_inside_grid:
-        stop_reason = 'particle_exited'
+        stop_reason = 'exited_left'
         return True
 
 
@@ -124,8 +124,8 @@ def verlett():
             # Obtenemos la próxima posición
             r.append( 2 * r[step] - r[step-1] + dt**2 * f(r[step], v[step])/M )
 
-            if step % log_step == 0:
-                print(f'{step} - R: {r[step]} - V: {round(np.linalg.norm(v[step]), 2)} - DR: {np.linalg.norm(r[-1]-r[-2])}')
+            # if step % log_step == 0:
+            #     print(f'{step} - R: {r[step]} - V: {round(np.linalg.norm(v[step]), 2)} - DR: {np.linalg.norm(r[-1]-r[-2])}')
 
             # Obtenemos la próxima velocidad
             v.append( (r[step+1]-r[step-1])/(2*dt) )
@@ -136,27 +136,6 @@ def verlett():
     except Exception:
         stop_reason = 'particle_absorbed'
         pass
-
-    absorbed = 0
-    exited = 0
-
-    left = 0
-    right = 0
-    top = 0
-    bottom = 0
-
-    if 'particle_absorbed' == stop_reason:
-        absorbed += 1
-    else:
-        exited += 1
-        if "exited_left" == stop_reason:
-            left += 1
-        if "exited_right" == stop_reason:
-            right += 1
-        if "exited_top" == stop_reason:
-            top += 1
-        if "exited_bottom" == stop_reason:
-            bottom += 1
 
     if write_ovito:
         with open('verlett.xyz', 'w') as file:
@@ -175,6 +154,7 @@ def verlett():
                 
                 file.write('{} {} {} 2e-9 0 1 0\n'.format(N+1, r[i][0], r[i][1]))
 
+    print(stop_reason)
     return r,v
 
 # ---------------------------------------------------------------
@@ -253,7 +233,7 @@ def animate():
     ani = animation.FuncAnimation(fig, update_plot, frames=range(len(rs)), fargs=(rs, scat))
     # pyplot.show()
 
-    ani.save('out/animation.gif', fps=4*(1e-13/dt))
+    ani.save('out/animation.gif', fps=8*(1e-13/dt))
 
 
 # ---------------------------------------------------------------
@@ -290,37 +270,55 @@ def energy_plot():
     pyplot.legend()
     pyplot.show()
 
-def trajectory_plot():
+def absortion_escape_plot():
     global stop_reason, v0, r0
 
-    lengths = []
-    p_abs = []
-    p_ext = []
-    p_left = []
-    p_right = []
-    p_top = []
-    p_bottom = []
+    V0 = [5e3, 10e3, 20e3, 30e3, 35e3, 40e3, 45e3, 50e3]
+    Y0 = np.linspace(L/2-D, L/2+D, 25, endpoint=True)
 
-    for _v0 in [5e-3, 5e-4]:
-        for _y in [L/2, L/2+D/2]:
-            v0 = _v0
-            r0 = _y
+    samples = len(Y0)
+    p_abs, p_exited, p_left, p_right, p_top, p_bottom = [], [], [], [], [], []
+
+    for _v0 in V0:
+        absorbed, exited, left, right, top, bottom = 0, 0, 0, 0, 0, 0
+
+        for _y0 in Y0:
+            print(f'V0: {_v0} - Y0: {_y0}')
+            v0 = np.array([_v0, 0])
+            r0 = np.array([0, _y0])
+            
             r,v = verlett()
 
-            p_abs.append(absorbed / N)
-            p_ext.append(exited / N)
-            p_left.append(left / exited)
-            p_right.append(right / exited)
-            p_top.append(top / exited)
-            p_bottom.append(bottom / exited)
+            if 'particle_absorbed' == stop_reason:
+                absorbed += 1
+            else:
+                exited += 1
+                if "exited_left" == stop_reason:
+                    left += 1
+                if "exited_right" == stop_reason:
+                    right += 1
+                if "exited_top" == stop_reason:
+                    top += 1
+                if "exited_bottom" == stop_reason:
+                    bottom += 1
+        
+        p_abs.append(absorbed / samples * 100)
+        p_exited.append(exited / samples * 100)
+        p_left.append(left / samples * 100)
+        p_right.append(right / samples * 100)
+        p_top.append(top / samples * 100)
+        p_bottom.append(bottom / samples * 100)
 
-            pyplot.scatter(v0, [p_abs, p_ext, p_left, p_right, p_top, p_bottom])
-    
+    pyplot.scatter(V0, p_abs, label='Absorbidas')
+    pyplot.scatter(V0, p_exited, label='Escapadas')
+    pyplot.scatter(V0, p_left, label='Escapadas (izquierda)')
+    pyplot.scatter(V0, p_right, label='Escapadas (derecha)')
+    pyplot.scatter(V0, p_top, label='Escapadas (arriba)')
+    pyplot.scatter(V0, p_bottom, label='Escapadas (abajo)')
+
+    pyplot.legend()
+    pyplot.yscale('log')
+    pyplot.xlabel('V0 (m/s)')
+    pyplot.ylabel('Proporción (%)')
     pyplot.show()
-            # if stop_reason == 'particle_absorbed':
-            #     lengths[-1] 
 
-# energy_check()
-# animate()
-# energy_plot()
-trajectory_plot()
