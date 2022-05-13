@@ -317,7 +317,7 @@ def energy_check(r0, v0, fun):
 #                         GRAFICOS
 # ---------------------------------------------------------------
 
-def energy_average_vs_dt_plot(v0):
+def energy_average_vs_dt_plot(v0, fun):
 
     y_values = [random.uniform(L/2 - D/2, L/2 + D/2) for _ in range(5)]
     
@@ -333,7 +333,7 @@ def energy_average_vs_dt_plot(v0):
         energies = list()
         for y_value in y_values:
             print(f'Dt: {dt} - Y: {y_value}')
-            rs, vs = verlett(r0=[0, y_value], v0=v0)
+            rs, vs = fun(r0=[0, y_value], v0=v0)
 
             initial_energy = 2 * potential_energy(qsign=1, r=rs[0]) + ff_pot_energy + 0.5 * M * math.hypot(vs[0][0], vs[0][1])**2
             final_energy = 2 * potential_energy(qsign=1, r=rs[-1]) + ff_pot_energy + 0.5 * M * math.hypot(vs[-1][0], vs[-1][1])**2
@@ -522,19 +522,19 @@ def trajectory_pdf_plot(fun):
 # ---------------------------------------------------------------
 
 # Parámetros de simulación
-dt = 1e-13
+dt = 1e-14
 log_step = 10
-# tf = np.Infinity
-tf = 2e-12
+tf = np.Infinity
+# tf = 2e-12
 
 
 if __name__ == '__main__':
-    # animate(r0=[0, L/3], v0=[5e3, 0], fun=gear)
+    # animate(r0=[0, L/3], v0=[5e3, 0], fun=verlett)
 
-    # energy_variation_plot(v0=[5e4, 0], fun=verlett)
+    energy_average_vs_dt_plot(v0=[5e4, 0], fun=gear)
 
-    # absortion_escape_plot(fun=gear)
+    # energy_variation_vs_t_plot(v0=[5e4, 0], fun=gear)
 
-    # trajectory_pdf_plot(fun=gear)
+    # absortion_escape_plot(fun=verlett)
 
-    energy_average_vs_dt_plot(v0=[5e4, 0])
+    # trajectory_pdf_plot(fun=verlett)
