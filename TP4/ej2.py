@@ -69,6 +69,7 @@ def potential_energy(qsign, r):
         p_qsign *= -1
     return u
 
+
 def should_stop(r, step):
     global stop_reason
 
@@ -110,7 +111,7 @@ def should_stop(r, step):
 
 def verlett(r0, v0, ovito=False):
     global stop_reason
-    print('--- Verlett ---')
+    # print('--- Verlett ---')
 
     # Inicializamos el problema
     r = [np.array(r0)]
@@ -169,7 +170,7 @@ def verlett(r0, v0, ovito=False):
 
 def gear(r0, v0):
     global stop_reason
-    print('--- Gear ---')
+    # print('--- Gear ---')
 
     # Expresiones parciales de las derivadas superiores
 
@@ -231,6 +232,7 @@ def gear(r0, v0):
 
     # print(stop_reason)
     return r, r1
+
 
 # ---------------------------------------------------------------
 #                         ANALISIS
@@ -315,7 +317,45 @@ def energy_check(r0, v0, fun):
 #                         GRAFICOS
 # ---------------------------------------------------------------
 
-def energy_variation_plot(v0, fun):
+def energy_average_vs_dt_plot(v0):
+
+    y_values = [random.uniform(L/2 - D/2, L/2 + D/2) for _ in range(5)]
+    
+    values = list()
+    stds = list()
+
+    # dts = [1e-11, 1e-12, 1e-13, 1e-14, 1e-15, 1e-16, 1e-17, 1e-18]
+    dts = [1e-11, 1e-12, 1e-13, 1e-14]
+
+    global dt
+    for _dt in dts:
+        dt = _dt
+        energies = list()
+        for y_value in y_values:
+            print(f'Dt: {dt} - Y: {y_value}')
+            rs, vs = verlett(r0=[0, y_value], v0=v0)
+
+            initial_energy = 2 * potential_energy(qsign=1, r=rs[0]) + ff_pot_energy + 0.5 * M * math.hypot(vs[0][0], vs[0][1])**2
+            final_energy = 2 * potential_energy(qsign=1, r=rs[-1]) + ff_pot_energy + 0.5 * M * math.hypot(vs[-1][0], vs[-1][1])**2
+
+            # initial_energy = potential_energy(qsign=1, r=rs[0]) + 0.5 * M * math.hypot(vs[0][0], vs[0][1])**2
+            # final_energy = potential_energy(qsign=1, r=rs[-1]) + 0.5 * M * math.hypot(vs[-1][0], vs[-1][1])**2
+
+            # print("Initial energy: {}, Final energy: {}, Energy difference: {}".format(initial_energy, final_energy, abs(initial_energy - final_energy)/initial_energy))
+            energies.append(abs(initial_energy - final_energy)/initial_energy)
+
+        values.append(np.mean(energies))
+        stds.append(np.std(energies))
+
+    pyplot.errorbar(dts, values, yerr=stds, fmt='o')
+    pyplot.xlabel('dt (s)')
+    pyplot.ylabel('Energía total promedio')
+    pyplot.xscale('log')
+    pyplot.yscale('log')
+    pyplot.show()
+
+
+def energy_variation_vs_t_plot(v0, fun):
     global  dt
     y = L/2
 
@@ -353,7 +393,7 @@ def energy_variation_plot(v0, fun):
     pyplot.show()
 
 
-def trajectory_vs_dt_plot(fun):
+def trajectory_vs_v0_plot(fun):
     y_values = [random.uniform(0, L) for _ in range(25)]
     # v_values = [5e3+11250*i for i in range(5)]
     v_values = [5e3, 10e3, 15e3, 20e3, 25e3, 30e3, 35e3, 40e3, 45e3, 50e3]
@@ -491,10 +531,10 @@ tf = 2e-12
 if __name__ == '__main__':
     # animate(r0=[0, L/3], v0=[5e3, 0], fun=gear)
 
-    energy_variation_plot(v0=[5e4, 0], fun=gear)
-
-    print(ff_pot_energy)
+    # energy_variation_plot(v0=[5e4, 0], fun=verlett)
 
     # absortion_escape_plot(fun=gear)
 
     # trajectory_pdf_plot(fun=gear)
+
+    energy_average_vs_dt_plot(v0=[5e4, 0])
