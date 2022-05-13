@@ -103,34 +103,34 @@ def verlett(r0, v0, ovito=False):
     v = [np.array(v0)]
     step = 0
 
-    # print(f'{step} - R: {r[step]} - V: {v[step]} - F: {f(r[step], v[step])}')
-
-    # Se evalua la velocidad inicial y la posición inicial
-    v.append( v[0] + dt*f(r[0], v[0])/M )
-    r.append( r[0] + dt*v[1] + (dt**2)*f(r[0], v[0])/(2*M) )
-
-    step = 1
-    t = step*dt
-
     while not should_stop(r, step):
+        # if step % log_step == 0:
+        #     print(f'{step} - R: {r[step]} - V: {v[step]} - F: {force}')
+        #     print(f'{step} - R: {r[step]} - V: {round(np.linalg.norm(v[step]), 2)} - A: {round(np.linalg.norm(f(r[step], v[step]))/M, 2)}')
+
         force = f(r[step], v[step])
         if force is None:
             stop_reason = 'particle_absorbed'
             break
-        
-        # if step % log_step == 0:
-        #     print(f'{step} - R: {r[step]} - V: {v[step]} - F: {force}')
-            # print(f'{step} - R: {r[step]} - V: {round(np.linalg.norm(v[step]), 2)} - A: {round(np.linalg.norm(f(r[step], v[step]))/M, 2)}')
 
-        # Obtenemos la próxima posición
-        r.append( 2 * r[step] - r[step-1] + dt**2 * force/M )
+        if step == 0:
+            # Calculamos la posición previa
+            r_prev = r[0] - dt*v[0] - (dt**2)*f(r[0], v[0])/(2*M)
 
-        # Obtenemos la próxima velocidad
-        v.append( (r[step+1]-r[step-1])/(2*dt) )
+            # Obtenemos la próxima posición
+            r.append( 2 * r[step] - r_prev + dt**2 * force/M )
+
+            # Obtenemos la próxima velocidad
+            v.append( (r[step+1]-r_prev)/(2*dt) )
+        else:
+            # Obtenemos la próxima posición
+            r.append( 2 * r[step] - r[step-1] + dt**2 * force/M )
+
+            # Obtenemos la próxima velocidad
+            v.append( (r[step+1]-r[step-1])/(2*dt) )
 
         # Avanzamos el tiempo de la simulacion
         step += 1
-        t = step*dt
 
     if ovito:
         with open('verlett.xyz', 'w') as file:
@@ -268,7 +268,7 @@ def update_plot(i, rs, scat):
 
 
 def animate(r0, v0, fun):
-    rs, vs = fun(v0, r0)
+    rs, vs = fun(r0=r0, v0=v0)
 
     x, y, c = [], [], []
     qsign = 1
@@ -285,7 +285,7 @@ def animate(r0, v0, fun):
     scat = pyplot.scatter([rs[0][0]], [rs[0][1]], c=['g'])
 
     ani = animation.FuncAnimation(fig, update_plot, frames=range(len(rs)), fargs=(rs, scat))
-    # pyplot.show()
+    pyplot.show()
 
     ani.save('out/animation.gif', fps=8*(1e-13/dt))
 
@@ -525,11 +525,11 @@ tf = np.Infinity
 
 
 if __name__ == '__main__':
-    # animate(r0=[0, L/3], v0=[5e3, 0], fun=verlett)
+    # animate(r0=[0, L/3], v0=[5e3, 0], fun=gear)
 
     # energy_average_vs_dt_plot(v0=[5e4, 0], fun=gear)
 
-    energy_variation_vs_t_plot(v0=[5e4, 0], fun=gear)
+    energy_variation_vs_t_plot(v0=[5e4, 0], fun=verlett)
 
     # print(ff_pot_energy)
 

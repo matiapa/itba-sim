@@ -38,20 +38,24 @@ def verlett():
     r[0] = r0
     v[0] = v0
     step = 0
-
-    # Se evalua la velocidad inicial y la posición inicial
-    v[1] = v[0] + dt*f(r[0], v[0])/m
-    r[1] = r[0] + dt*v[1] + (dt**2)*f(r[0], v[0])/(2*m)
-
-    step += 1
     t = step*dt
 
     while t < tf-dt:
-        # Obtenemos la próxima posición
-        r[step+1] = 2 * r[step] - r[step-1] + dt**2 * f(r[step], v[step])/m
+        if t == 0:
+            # Calculamos la posición previa
+            r_prev = r[0] - dt*v[0] - (dt**2)*f(r[0], v[0])/(2*m)
 
-        # Obtenemos la próxima velocidad
-        v[step+1] = (r[step+1]-r[step-1])/(2*dt)
+            # Obtenemos la próxima posición
+            r[step+1] = 2 * r[step] - r_prev + dt**2 * f(r[step], v[step])/m
+
+            # Obtenemos la próxima velocidad
+            v[step+1] = (r[step+1]-r_prev)/(2*dt)
+        else:
+            # Obtenemos la próxima posición
+            r[step+1] = 2 * r[step] - r[step-1] + dt**2 * f(r[step], v[step])/m
+
+            # Obtenemos la próxima velocidad
+            v[step+1] = (r[step+1]-r[step-1])/(2*dt)
 
         # Avanzamos el tiempo de la simulacion
         step += 1
@@ -220,5 +224,5 @@ def multi_dt_analysis():
 
     pyplot.show()
 
-single_dt_analysis()
-# multi_dt_analysis()
+# single_dt_analysis()
+multi_dt_analysis()
