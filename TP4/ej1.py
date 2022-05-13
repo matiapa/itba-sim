@@ -29,7 +29,6 @@ f = lambda r,v : -k * r - gamma * v
 #                   ALGORITMO DE VERLETT
 # ---------------------------------------------------------------
 
-
 def verlett():
     # Vectores de posicion y velocidad
     r = np.arange(0, tf, dt).tolist()
@@ -59,6 +58,7 @@ def verlett():
         t = step*dt
 
     return r,v
+
 
 # ---------------------------------------------------------------
 #                   ALGORITMO DE BEEMAN
@@ -141,6 +141,7 @@ def gear():
         t = step*dt
     
     return r, r1
+
 
 def single_dt_analysis():
     # Ejecucion de los algoritmos

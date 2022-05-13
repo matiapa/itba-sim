@@ -13,11 +13,31 @@ N = 16**2
 D = 1e-8
 M = 1e-27
 Q = 1e-19
-k = 1e10
+K = 1e10
 L = (sqrt(N)-1)*D
+
 absortion_distance = 0.01*D
+particles_x = np.linspace(D, L+D, int(sqrt(N)), endpoint=True)
+particles_y = np.linspace(0, L, int(sqrt(N)), endpoint=True)
 
 stop_reason = ''
+
+# Calculate potential energy between fixed particles (constant)
+qsign1, ff_pot_energy = 1, 0
+for px1 in particles_x:
+    for py1 in particles_y:
+
+        qsign2 = 1
+        for px2 in particles_x:
+            for py2 in particles_y:
+                if px1 == px2 and py1 == py2:
+                    continue
+                ff_pot_energy += qsign1 * qsign2 * K * Q**2 / hypot(px1-px2, py1-py2)
+                qsign2 *= -1
+            qsign2 *= -1
+        
+        qsign1 *= -1
+    qsign1 *= -1
 
 # ---------------------------------------------------------------
 #                         SIMULACION
@@ -26,28 +46,28 @@ stop_reason = ''
 def f(ri, v):
     qsign = 1
     force = np.array([0.0, 0.0])
-    for px in np.linspace(D, L+D, int(sqrt(N)), endpoint=True):
-        for py in np.linspace(0, L, int(sqrt(N)), endpoint=True):
+    for px in particles_x:
+        for py in particles_y:
             rij = ri - [px, py]
             rij_norm = np.linalg.norm(rij)
 
             if rij_norm < absortion_distance:
                 return None
 
-            force += k * Q**2 * (qsign / rij_norm**2) * rij/rij_norm
+            force += K * Q**2 * (qsign / rij_norm**2) * rij/rij_norm
             qsign *= -1
         qsign *= -1
     return force
 
-def potential_energy(r):
-    qsign, u = 1, 0
-    for px in np.linspace(D, L+D, int(sqrt(N)), endpoint=True):
-        for py in np.linspace(0, L, int(sqrt(N)), endpoint=True):
-            u += k * Q**2 * qsign / hypot(px-r[0], py-r[1])
-            qsign *= -1
-        qsign *= -1
-    return u
 
+def potential_energy(qsign, r):
+    p_qsign, u = 1, 0
+    for px in particles_x:
+        for py in particles_y:
+            u += K * Q**2 * qsign * p_qsign / hypot(px-r[0], py-r[1])
+            p_qsign *= -1
+        p_qsign *= -1
+    return u
 
 def should_stop(r, step):
     global stop_reason
@@ -90,6 +110,7 @@ def should_stop(r, step):
 
 def verlett(r0, v0, ovito=False):
     global stop_reason
+    print('--- Verlett ---')
 
     # Inicializamos el problema
     r = [np.array(r0)]
@@ -111,8 +132,8 @@ def verlett(r0, v0, ovito=False):
             stop_reason = 'particle_absorbed'
             break
         
-        if step % log_step == 0:
-            print(f'{step} - R: {r[step]} - V: {v[step]} - F: {force}')
+        # if step % log_step == 0:
+        #     print(f'{step} - R: {r[step]} - V: {v[step]} - F: {force}')
             # print(f'{step} - R: {r[step]} - V: {round(np.linalg.norm(v[step]), 2)} - A: {round(np.linalg.norm(f(r[step], v[step]))/M, 2)}')
 
         # Obtenemos la próxima posición
@@ -144,6 +165,72 @@ def verlett(r0, v0, ovito=False):
 
     # print(stop_reason)
     return r,v
+
+
+def gear(r0, v0):
+    global stop_reason
+    print('--- Gear ---')
+
+    # Expresiones parciales de las derivadas superiores
+
+    d = lambda x, y, xj, yj : (x-xj)**2 + (y-yj)**2
+
+    r2p = lambda x, y, xj, yj : K/M * Q**2 / d(x,y,xj,yj)**(3/2) * np.array([x-xj, y-yj])
+
+    r3p = lambda x, y, xj, yj : -3 * K/M * Q**2 / d(x,y,xj,yj)**(5/2) * np.array([(x-xj)**2, (y-yj)**2]) + K/M * Q**2 / d(x,y,xj,yj)**(3/2) * np.array([1, 1])
+
+    r4p = lambda x, y, xj, yj : 15 * K/M * Q**2 / d(x,y,xj,yj)**(7/2) * np.array([(x-xj)**3, (y-yj)**3]) - 9 * K/M * Q**2 / d(x,y,xj,yj)**(5/2) * np.array([x-xj, y-yj])
+
+    r5p = lambda x, y, xj, yj : -105 * K/M * Q**2 / d(x,y,xj,yj)**(9/2) * np.array([(x-xj)**4, (y-yj)**4]) + 90 * K/M * Q**2 / d(x,y,xj,yj)**(7/2) * np.array([(x-xj)**2, (y-yj)**2]) - 9 * K/M * Q**2 / d(x,y,xj,yj)**(5/2) * np.array([1, 1])
+
+    #  Expresiones completas de las derivadas superiores
+
+    sign = [[1,-1],[-1,1]]
+    iterable = zip(range(len(particles_x)), range(len(particles_y)))
+
+    r2 = lambda t : sum( sign[i%2][j%2] * r2p(r[int(t/dt)][0], r[int(t/dt)][1], particles_x[i], particles_y[j]) for i,j in iterable)
+    r3 = lambda t : sum( sign[i%2][j%2] * r3p(r[int(t/dt)][0], r[int(t/dt)][1], particles_x[i], particles_y[j]) for i,j in iterable)
+    r4 = lambda t : sum( sign[i%2][j%2] * r4p(r[int(t/dt)][0], r[int(t/dt)][1], particles_x[i], particles_y[j]) for i,j in iterable)
+    r5 = lambda t : sum( sign[i%2][j%2] * r5p(r[int(t/dt)][0], r[int(t/dt)][1], particles_x[i], particles_y[j]) for i,j in iterable)
+
+    # Coeficientes del predictor de Gear de orden 5
+    alpha = [3/16, 251/360, 1, 11/18, 1/6, 1/60]
+
+    # Inicializamos el problema
+
+    r = [np.array(r0)]
+    r1 = [np.array(v0)]
+    step = 0
+    t = step*dt
+
+    # Comenzamos a iterar
+
+    while not should_stop(r, step):
+        # Predecimos la posición, velocidad y aceleración
+        r_p = r[step] + r1[step] * dt + r2(t) * dt**2/2 + r3(t) * dt**3/6 + r4(t) * dt**4/24 + r5(t) * dt**5/120
+        r1_p = r1[step] + r2(t) * dt + r3(t) * dt**2/2 + r4(t) * dt**3/6 + r5(t) * dt**4/24
+        r2_p = r2(t) + r3(t) * dt + r4(t) * dt**2/2 + r5(t) * dt**3/6
+
+        # Calculamos la fuerza y nos fijamos que la partícula no haya sido absorbida
+        force = f(r_p, r1_p)
+        if force is None:
+            stop_reason = 'particle_absorbed'
+            break
+
+        # Evaluamos la aceleración y la comparamos con la predecida
+        a = force / M
+        DR2 = (a - r2_p) * dt**2 / 2
+
+        # Corregimos la posición y velocidad y las guardamos
+        r.append( r_p + alpha[0] * DR2 )
+        r1.append( r1_p + alpha[1] * DR2 * 1/dt )
+
+        # Avanzamos el tiempo de la simulación
+        step += 1
+        t = step*dt
+
+    # print(stop_reason)
+    return r, r1
 
 # ---------------------------------------------------------------
 #                         ANALISIS
@@ -182,13 +269,13 @@ def update_plot(i, rs, scat):
     return scat
 
 
-def animate(r0, v0):
-    rs, vs = verlett(v0, r0)
+def animate(r0, v0, fun):
+    rs, vs = fun(v0, r0)
 
     x, y, c = [], [], []
     qsign = 1
-    for px in np.linspace(D, L+D, int(sqrt(N)), endpoint=True):
-        for py in np.linspace(0, L, int(sqrt(N)), endpoint=True):
+    for px in particles_x:
+        for py in particles_y:
             x.append(px)
             y.append(py)
             c.append('r' if qsign==1 else 'b')
@@ -205,8 +292,8 @@ def animate(r0, v0):
     ani.save('out/animation.gif', fps=8*(1e-13/dt))
 
 
-def energy_check(r0, v0):
-    rs, vs = verlett(v0, r0)
+def energy_check(r0, v0, fun):
+    rs, vs = fun(v0, r0)
 
     up, uk, maxdiff = [], [], 0
     for i in range(len(rs)):
@@ -228,28 +315,36 @@ def energy_check(r0, v0):
 #                         GRAFICOS
 # ---------------------------------------------------------------
 
-def energy_plot(v0):
+def energy_variation_plot(v0, fun):
     global  dt
+    y = L/2
 
     for _dt in [0.5e-12, 1e-13, 1e-14, 1e-15]:
-        u_dt = []
-        for y in [L/2]:
-        # for y in np.linspace(L/2-D, L/2+D, 5, True):
-            dt = _dt
-
-            print(f'Running dt={dt}, y={y}')
-            rs, vs = verlett(r0=[0, y], v0=v0)
-
-            u0 = potential_energy(rs[0]) + 0.5 * M * (vs[0][0]**2+vs[0][1]**2)
-
-            for i in range(len(rs)):
-                r, v = rs[i], vs[i]
-                if len(u_dt)<=i:
-                    u_dt.append(0)
-                u_dt[i] += abs(potential_energy(r) + 0.5 * M * (v[0]**2+v[1]**2) - u0) * 100 / (u0 * len(rs))
+        dt = _dt
+        print(f'Running dt={dt}')
         
-        times = np.arange(0, len(rs), 1)*dt
-        pyplot.plot(times[1:], u_dt[1:], label=f'dt={dt}')
+        rs, vs = fun(r0=[0, y], v0=v0)
+
+        # Calculamos la energía inicial
+
+        k_0 = 0.5 * M * (vs[0][0]**2+vs[0][1]**2)
+        ue_0 = 2 * potential_energy(qsign=1, r=rs[0]) + ff_pot_energy
+        u_0 = k_0 + ue_0
+
+        print(f'K0: {k_0} - UE0: {ue_0} - U0: {u_0}')
+
+        u_var = []
+        for i in range(1, len(rs)):
+            r_t, v_t = rs[i], vs[i]
+
+            k_t = 0.5 * M * (v_t[0]**2+v_t[1]**2)
+            ue_t = 2 * potential_energy(qsign=1, r=r_t) + ff_pot_energy
+            u_t = k_t + ue_t
+
+            u_var.append(abs(u_t - u_0) / u_0 * 100)
+        
+        times = np.array(range(1, len(rs))) * dt
+        pyplot.plot(times, u_var, label=f'dt={dt}')
     
     pyplot.xlabel('Tiempo (s)')
     pyplot.ylabel('Variacion de Et (%)')
@@ -258,7 +353,7 @@ def energy_plot(v0):
     pyplot.show()
 
 
-def trajectory_vs_dt_plot():
+def trajectory_vs_dt_plot(fun):
     y_values = [random.uniform(0, L) for _ in range(25)]
     # v_values = [5e3+11250*i for i in range(5)]
     v_values = [5e3, 10e3, 15e3, 20e3, 25e3, 30e3, 35e3, 40e3, 45e3, 50e3]
@@ -269,7 +364,7 @@ def trajectory_vs_dt_plot():
         trajectories = list()
         for y_value in y_values:
             print(f'V0: {v_value} - Y0: {y_value}')
-            r, v = verlett(r0=[0, y_value], v0=[v_value, 0])
+            r, v = fun(r0=[0, y_value], v0=[v_value, 0])
 
             # calculo la longitud de la trayectoria de la particula
             aux = 0
@@ -294,11 +389,10 @@ def trajectory_vs_dt_plot():
     pyplot.show()
 
 
-def absortion_escape_plot():
+def absortion_escape_plot(fun):
     global stop_reason
 
-    V0 = [40e3, 45e3, 50e3]
-    # V0 = [5e3, 10e3, 15e3, 20e3, 25e3, 30e3, 35e3, 40e3, 45e3, 50e3]
+    V0 = [5e3, 10e3, 15e3, 20e3, 25e3, 30e3, 35e3, 40e3, 45e3, 50e3]
     Y0 = np.linspace(L/2-D, L/2+D, 25, endpoint=True)
 
     samples = len(Y0)
@@ -310,7 +404,7 @@ def absortion_escape_plot():
         for y0 in Y0:
             print(f'V0: {v0} - Y0: {y0}')
 
-            r,v = verlett(r0=[0, y0], v0=[v0, 0])
+            r,v = fun(r0=[0, y0], v0=[v0, 0])
 
             if 'particle_absorbed' == stop_reason:
                 absorbed += 1
@@ -347,20 +441,21 @@ def absortion_escape_plot():
     pyplot.show()
 
 
-def trajectory_pdf_plot():
+def trajectory_pdf_plot(fun):
     global stop_reason
 
     V0 = [40e3, 45e3, 50e3]
-    Y0 = np.linspace(L/2-D, L/2+D, 100, endpoint=True)
+    # V0 = [5e3, 10e3, 15e3]
+    Y0 = np.linspace(L/2-D, L/2+D, 25, endpoint=True)
 
-    # trajectory
+    # Trajectory
     for v0 in V0:
         trajectory_lengths = []
 
         for y0 in Y0:
             print(f'V0: {v0} - Y0: {y0}')
             
-            r,v = verlett(r0=[0, y0], v0=[v0, 0])
+            r,v = fun(r0=[0, y0], v0=[v0, 0])
 
             if stop_reason == 'particle_absorbed':
                 length = 0
@@ -369,7 +464,7 @@ def trajectory_pdf_plot():
                 trajectory_lengths.append(length)
         
         print(trajectory_lengths)
-        pyplot.hist(trajectory_lengths, density = True, histtype="step", label=f'V0={"{:.1e}".format(v0)}')
+        pyplot.hist(trajectory_lengths, density = True, histtype="step", label=f'V0={"{:.1e} m/s".format(v0)}')
     
     pyplot.legend()
     pyplot.ticklabel_format(style='sci', axis='x', scilimits=(0,0))
@@ -377,7 +472,6 @@ def trajectory_pdf_plot():
     pyplot.xlabel('Longitud de la trayectoria (m)')
     pyplot.ylabel('Densidad de probabilidad')
 
-    # pyplot.xscale('log')
     pyplot.yscale('log')
 
     pyplot.show()
@@ -393,9 +487,14 @@ log_step = 10
 # tf = np.Infinity
 tf = 2e-12
 
+
 if __name__ == '__main__':
-    energy_plot(v0=[5e4, 0])
+    # animate(r0=[0, L/3], v0=[5e3, 0], fun=gear)
 
-    # animate(r0=[0, L/3], v0=[5e3, 0])
+    energy_variation_plot(v0=[5e4, 0], fun=gear)
 
-    # trajectory_pdf_plot()
+    print(ff_pot_energy)
+
+    # absortion_escape_plot(fun=gear)
+
+    # trajectory_pdf_plot(fun=gear)
