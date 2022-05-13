@@ -43,7 +43,8 @@ def verlett():
     while t < tf-dt:
         if t == 0:
             # Calculamos la posición previa
-            r_prev = r[0] - dt*v[0] - (dt**2)*f(r[0], v[0])/(2*m)
+            v_prev = v[0] - dt * f(r[0], v[0])/m
+            r_prev = r[0] - dt*v_prev - (dt**2)*f(r[0], v[0])/(2*m)
 
             # Obtenemos la próxima posición
             r[step+1] = 2 * r[step] - r_prev + dt**2 * f(r[step], v[step])/m
@@ -81,7 +82,13 @@ def beeman():
 
     while t < tf-dt:
         a_t = f(r[step], v[step])/m
-        a_t_less_dt = f(r[step-1], v[step-1])/m if step>0 else f(r[0]-v[0]*dt, v[0])
+
+        if step > 0:
+            a_t_less_dt = f(r[step-1], v[step-1])/m
+        else:
+            v_prev = v[0] - dt * f(r[0], v[0])/m
+            r_prev = r[0] - dt*v_prev - (dt**2)*f(r[0], v[0])/(2*m)
+            a_t_less_dt = f(r_prev, v_prev)/m
 
         # Obtenemos la proxima posicion
         r[step+1] = r[step] + v[step]*dt + 2/3 * a_t * dt**2 - 1/6 * a_t_less_dt * dt**2
@@ -112,10 +119,10 @@ def gear():
     r1 = np.arange(0, tf, dt).tolist()
 
     # Expresiones de las derivadas superiores de la posicion
-    r2 = lambda t : -k/m * r[int(t/dt)] - gamma/m * r1[int(t/dt)]
-    r3 = lambda t : -k/m * r1[int(t/dt)] - gamma/m * r2(t)
-    r4 = lambda t : -k/m * r2(t) - gamma/m * r3(t)
-    r5 = lambda t : -k/m * r3(t) - gamma/m * r4(t)
+    r2 = lambda step : -k/m * r[step] - gamma/m * r1[step]
+    r3 = lambda step : -k/m * r1[step] - gamma/m * r2(step)
+    r4 = lambda step : -k/m * r2(step) - gamma/m * r3(step)
+    r5 = lambda step : -k/m * r3(step) - gamma/m * r4(step)
 
     # Coeficientes del predictor de Gear de orden 5
     alpha = [3/16, 251/360, 1, 11/18, 1/6, 1/60]
@@ -124,17 +131,17 @@ def gear():
     r[0] = r0
     r1[0] = v0
     step = 0
-    t = step*dt
 
-    while t < tf-dt:
+    while step*dt < tf-dt:
         # Predecimos la posicion, velocidad y aceleracion
-        r_p = r[step] + r1[step] * dt + r2(t) * dt**2/2 + r3(t) * dt**3/6 + r4(t) * dt**4/24 + r5(t) * dt**5/120
-        r1_p = r1[step] + r2(t) * dt + r3(t) * dt**2/2 + r4(t) * dt**3/6 + r5(t) * dt**4/24
-        r2_p = r2(t) + r3(t) * dt + r4(t) * dt**2/2 + r5(t) * dt**3/6
+        r_p = r[step] + r1[step] * dt + r2(step) * dt**2/2 + r3(step) * dt**3/6 + r4(step) * dt**4/24 + r5(step) * dt**5/120
+        r1_p = r1[step] + r2(step) * dt + r3(step) * dt**2/2 + r4(step) * dt**3/6 + r5(step) * dt**4/24
+        r2_p = r2(step) + r3(step) * dt + r4(step) * dt**2/2 + r5(step) * dt**3/6
 
         # Evaluamos la aceleracion y la comparamos con la predecida
-        a = f(r_p, r1_p) / m
-        DR2 = (a - r2_p) * dt**2 / 2
+        r[step+1] = r_p
+        r1[step+1] = r1_p
+        DR2 = (r2(step+1) - r2_p) * dt**2 / 2
 
         # Corregimos la posicion y velocidad y las guardamos
         r[step+1] = r_p + alpha[0] * DR2
@@ -142,7 +149,6 @@ def gear():
 
         # Avanzamos el tiempo de la simulacion
         step += 1
-        t = step*dt
     
     return r, r1
 

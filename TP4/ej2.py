@@ -166,37 +166,39 @@ def gear(r0, v0):
 
     d = lambda x, y, xj, yj : (x-xj)**2 + (y-yj)**2
 
-    r2p = lambda t, x, y, xj, yj : K/M * Q**2 / d(x,y,xj,yj)**(3/2) * np.array([x-xj, y-yj])
+    r2p = lambda step, x, y, xj, yj : K/M * Q**2 / d(x,y,xj,yj)**(3/2) * np.array([x-xj, y-yj])
 
-    r3p = lambda t, x, y, xj, yj : (-3 * K/M * Q**2 / d(x,y,xj,yj)**(5/2) * np.array([(x-xj)**2, (y-yj)**2]) + K/M * Q**2 / d(x,y,xj,yj)**(3/2) * np.array([1, 1])) * (r1[int(t/dt)])
+    r3p = lambda step, x, y, xj, yj : (-3 * K/M * Q**2 / d(x,y,xj,yj)**(5/2) * np.array([(x-xj)**2, (y-yj)**2]) + K/M * Q**2 / d(x,y,xj,yj)**(3/2) * np.array([1, 1])) * (r1[step])
 
-    r4p = lambda t, x, y, xj, yj : (15 * K/M * Q**2 / d(x,y,xj,yj)**(7/2) * np.array([(x-xj)**3, (y-yj)**3]) - 9 * K/M * Q**2 / d(x,y,xj,yj)**(5/2) * np.array([x-xj, y-yj])) * (r1[int(t/dt)])**2
+    r4p = lambda step, x, y, xj, yj : (15 * K/M * Q**2 / d(x,y,xj,yj)**(7/2) * np.array([(x-xj)**3, (y-yj)**3]) - 9 * K/M * Q**2 / d(x,y,xj,yj)**(5/2) * np.array([x-xj, y-yj])) * (r1[step])**2
 
-    r5p = lambda t, x, y, xj, yj : (-105 * K/M * Q**2 / d(x,y,xj,yj)**(9/2) * np.array([(x-xj)**4, (y-yj)**4]) + 90 * K/M * Q**2 / d(x,y,xj,yj)**(7/2) * np.array([(x-xj)**2, (y-yj)**2]) - 9 * K/M * Q**2 / d(x,y,xj,yj)**(5/2) * np.array([1, 1])) * (r1[int(t/dt)])**3
+    r5p = lambda step, x, y, xj, yj : (-105 * K/M * Q**2 / d(x,y,xj,yj)**(9/2) * np.array([(x-xj)**4, (y-yj)**4]) + 90 * K/M * Q**2 / d(x,y,xj,yj)**(7/2) * np.array([(x-xj)**2, (y-yj)**2]) - 9 * K/M * Q**2 / d(x,y,xj,yj)**(5/2) * np.array([1, 1])) * (r1[step])**3
 
     #  Expresiones completas de las derivadas superiores
 
     sign = [[1,-1],[-1,1]]
     iterable = zip(range(len(particles_x)), range(len(particles_y)))
 
-    r2 = lambda t : sum( sign[i%2][j%2] * r2p(t, r[int(t/dt)][0], r[int(t/dt)][1], particles_x[i], particles_y[j]) for i,j in iterable)
-    r3 = lambda t : sum( sign[i%2][j%2] * r3p(t, r[int(t/dt)][0], r[int(t/dt)][1], particles_x[i], particles_y[j]) for i,j in iterable)
-    r4 = lambda t : sum( sign[i%2][j%2] * r4p(t, r[int(t/dt)][0], r[int(t/dt)][1], particles_x[i], particles_y[j]) for i,j in iterable)
-    r5 = lambda t : sum( sign[i%2][j%2] * r5p(t, r[int(t/dt)][0], r[int(t/dt)][1], particles_x[i], particles_y[j]) for i,j in iterable)
+    r2 = lambda step : sum( sign[i%2][j%2] * r2p(step, r[step][0], r[step][1], particles_x[i], particles_y[j]) for i,j in iterable)
+    r3 = lambda step : sum( sign[i%2][j%2] * r3p(step, r[step][0], r[step][1], particles_x[i], particles_y[j]) for i,j in iterable)
+    r4 = lambda step : sum( sign[i%2][j%2] * r4p(step, r[step][0], r[step][1], particles_x[i], particles_y[j]) for i,j in iterable)
+    r5 = lambda step : sum( sign[i%2][j%2] * r5p(step, r[step][0], r[step][1], particles_x[i], particles_y[j]) for i,j in iterable)
 
     # Coeficientes del predictor de Gear de orden 5
     alpha = [3/16, 251/360, 1, 11/18, 1/6, 1/60]
-    
     step = 0
-    t = step*dt
 
     # Comenzamos a iterar
 
     while not should_stop(r, step):
+        # if step % log_step == 0:
+        #     print(f'{step} - R: {r[step]} - V: {v[step]} - F: {force}')
+        #     print(f'{step} - R: {r[step]} - V: {round(np.linalg.norm(v[step]), 2)} - A: {round(np.linalg.norm(f(r[step], v[step]))/M, 2)}')
+
         # Predecimos la posición, velocidad y aceleración
-        r_p = r[step] + r1[step] * dt + r2(t) * dt**2/2 + r3(t) * dt**3/6 + r4(t) * dt**4/24 + r5(t) * dt**5/120
-        r1_p = r1[step] + r2(t) * dt + r3(t) * dt**2/2 + r4(t) * dt**3/6 + r5(t) * dt**4/24
-        r2_p = r2(t) + r3(t) * dt + r4(t) * dt**2/2 + r5(t) * dt**3/6
+        r_p = r[step] + r1[step] * dt + r2(step) * dt**2/2 + r3(step) * dt**3/6 + r4(step) * dt**4/24 + r5(step) * dt**5/120
+        r1_p = r1[step] + r2(step) * dt + r3(step) * dt**2/2 + r4(step) * dt**3/6 + r5(step) * dt**4/24
+        r2_p = r2(step) + r3(step) * dt + r4(step) * dt**2/2 + r5(step) * dt**3/6
 
         # Calculamos la fuerza y nos fijamos que la partícula no haya sido absorbida
         force = f(r_p, r1_p)
@@ -205,16 +207,16 @@ def gear(r0, v0):
             break
 
         # Evaluamos la aceleración y la comparamos con la predecida
-        a = force / M
-        DR2 = (a - r2_p) * dt**2 / 2
+        r.append( r_p )
+        r1.append( r1_p )
+        DR2 = (r2(step+1) - r2_p) * dt**2 / 2
 
         # Corregimos la posición y velocidad y las guardamos
-        r.append( r_p + alpha[0] * DR2 )
-        r1.append( r1_p + alpha[1] * DR2 * 1/dt )
+        r[step+1] = r_p + alpha[0] * DR2
+        r1[step+1] = r1_p + alpha[1] * DR2 * 1/dt
 
         # Avanzamos el tiempo de la simulación
         step += 1
-        t = step*dt
 
     # print(stop_reason)
     return r, r1
