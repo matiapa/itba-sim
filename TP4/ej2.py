@@ -22,23 +22,6 @@ particles_y = np.linspace(0, L, int(sqrt(N)), endpoint=True)
 
 stop_reason = ''
 
-# Calculate potential energy between fixed particles (constant)
-qsign1, ff_pot_energy = 1, 0
-for px1 in particles_x:
-    for py1 in particles_y:
-
-        qsign2 = 1
-        for px2 in particles_x:
-            for py2 in particles_y:
-                if px1 == px2 and py1 == py2:
-                    continue
-                ff_pot_energy += qsign1 * qsign2 * K * Q**2 / hypot(px1-px2, py1-py2)
-                qsign2 *= -1
-            qsign2 *= -1
-        
-        qsign1 *= -1
-    qsign1 *= -1
-
 # ---------------------------------------------------------------
 #                         SIMULACION
 # ---------------------------------------------------------------
@@ -64,6 +47,8 @@ def potential_energy(qsign, r):
     p_qsign, u = 1, 0
     for px in particles_x:
         for py in particles_y:
+            if px==r[0] and py==r[1]:
+                continue
             u += K * Q**2 * qsign * p_qsign / hypot(px-r[0], py-r[1])
             p_qsign *= -1
         p_qsign *= -1
@@ -172,35 +157,36 @@ def gear(r0, v0):
     global stop_reason
     # print('--- Gear ---')
 
+    # Inicializamos el problema
+
+    r = [np.array(r0)]
+    r1 = [np.array(v0)]
+
     # Expresiones parciales de las derivadas superiores
 
     d = lambda x, y, xj, yj : (x-xj)**2 + (y-yj)**2
 
-    r2p = lambda x, y, xj, yj : K/M * Q**2 / d(x,y,xj,yj)**(3/2) * np.array([x-xj, y-yj])
+    r2p = lambda t, x, y, xj, yj : K/M * Q**2 / d(x,y,xj,yj)**(3/2) * np.array([x-xj, y-yj])
 
-    r3p = lambda x, y, xj, yj : -3 * K/M * Q**2 / d(x,y,xj,yj)**(5/2) * np.array([(x-xj)**2, (y-yj)**2]) + K/M * Q**2 / d(x,y,xj,yj)**(3/2) * np.array([1, 1])
+    r3p = lambda t, x, y, xj, yj : (-3 * K/M * Q**2 / d(x,y,xj,yj)**(5/2) * np.array([(x-xj)**2, (y-yj)**2]) + K/M * Q**2 / d(x,y,xj,yj)**(3/2) * np.array([1, 1])) * (r1[int(t/dt)])
 
-    r4p = lambda x, y, xj, yj : 15 * K/M * Q**2 / d(x,y,xj,yj)**(7/2) * np.array([(x-xj)**3, (y-yj)**3]) - 9 * K/M * Q**2 / d(x,y,xj,yj)**(5/2) * np.array([x-xj, y-yj])
+    r4p = lambda t, x, y, xj, yj : (15 * K/M * Q**2 / d(x,y,xj,yj)**(7/2) * np.array([(x-xj)**3, (y-yj)**3]) - 9 * K/M * Q**2 / d(x,y,xj,yj)**(5/2) * np.array([x-xj, y-yj])) * (r1[int(t/dt)])**2
 
-    r5p = lambda x, y, xj, yj : -105 * K/M * Q**2 / d(x,y,xj,yj)**(9/2) * np.array([(x-xj)**4, (y-yj)**4]) + 90 * K/M * Q**2 / d(x,y,xj,yj)**(7/2) * np.array([(x-xj)**2, (y-yj)**2]) - 9 * K/M * Q**2 / d(x,y,xj,yj)**(5/2) * np.array([1, 1])
+    r5p = lambda t, x, y, xj, yj : (-105 * K/M * Q**2 / d(x,y,xj,yj)**(9/2) * np.array([(x-xj)**4, (y-yj)**4]) + 90 * K/M * Q**2 / d(x,y,xj,yj)**(7/2) * np.array([(x-xj)**2, (y-yj)**2]) - 9 * K/M * Q**2 / d(x,y,xj,yj)**(5/2) * np.array([1, 1])) * (r1[int(t/dt)])**3
 
     #  Expresiones completas de las derivadas superiores
 
     sign = [[1,-1],[-1,1]]
     iterable = zip(range(len(particles_x)), range(len(particles_y)))
 
-    r2 = lambda t : sum( sign[i%2][j%2] * r2p(r[int(t/dt)][0], r[int(t/dt)][1], particles_x[i], particles_y[j]) for i,j in iterable)
-    r3 = lambda t : sum( sign[i%2][j%2] * r3p(r[int(t/dt)][0], r[int(t/dt)][1], particles_x[i], particles_y[j]) for i,j in iterable)
-    r4 = lambda t : sum( sign[i%2][j%2] * r4p(r[int(t/dt)][0], r[int(t/dt)][1], particles_x[i], particles_y[j]) for i,j in iterable)
-    r5 = lambda t : sum( sign[i%2][j%2] * r5p(r[int(t/dt)][0], r[int(t/dt)][1], particles_x[i], particles_y[j]) for i,j in iterable)
+    r2 = lambda t : sum( sign[i%2][j%2] * r2p(t, r[int(t/dt)][0], r[int(t/dt)][1], particles_x[i], particles_y[j]) for i,j in iterable)
+    r3 = lambda t : sum( sign[i%2][j%2] * r3p(t, r[int(t/dt)][0], r[int(t/dt)][1], particles_x[i], particles_y[j]) for i,j in iterable)
+    r4 = lambda t : sum( sign[i%2][j%2] * r4p(t, r[int(t/dt)][0], r[int(t/dt)][1], particles_x[i], particles_y[j]) for i,j in iterable)
+    r5 = lambda t : sum( sign[i%2][j%2] * r5p(t, r[int(t/dt)][0], r[int(t/dt)][1], particles_x[i], particles_y[j]) for i,j in iterable)
 
     # Coeficientes del predictor de Gear de orden 5
     alpha = [3/16, 251/360, 1, 11/18, 1/6, 1/60]
-
-    # Inicializamos el problema
-
-    r = [np.array(r0)]
-    r1 = [np.array(v0)]
+    
     step = 0
     t = step*dt
 
@@ -233,6 +219,16 @@ def gear(r0, v0):
     # print(stop_reason)
     return r, r1
 
+# Calculate potential energy between fixed particles (constant)
+
+qsign, ff_pot_energy = 1, 0
+for px in particles_x:
+    for py in particles_y:
+
+        ff_pot_energy += potential_energy(qsign, [px, py])
+        
+        qsign *= -1
+    qsign *= -1
 
 # ---------------------------------------------------------------
 #                         ANALISIS
@@ -531,9 +527,11 @@ tf = np.Infinity
 if __name__ == '__main__':
     # animate(r0=[0, L/3], v0=[5e3, 0], fun=verlett)
 
-    energy_average_vs_dt_plot(v0=[5e4, 0], fun=gear)
+    # energy_average_vs_dt_plot(v0=[5e4, 0], fun=gear)
 
-    # energy_variation_vs_t_plot(v0=[5e4, 0], fun=gear)
+    energy_variation_vs_t_plot(v0=[5e4, 0], fun=gear)
+
+    # print(ff_pot_energy)
 
     # absortion_escape_plot(fun=verlett)
 
