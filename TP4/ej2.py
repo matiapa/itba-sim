@@ -520,21 +520,21 @@ def trajectory_pdf_plot(fun):
 # ---------------------------------------------------------------
 
 # Parámetros de simulación
+
 dt = 1e-14
 log_step = 10
 tf = np.Infinity
 # tf = 2e-12
-
 
 if __name__ == '__main__':
     # animate(r0=[0, L/3], v0=[5e3, 0], fun=gear)
 
     # energy_average_vs_dt_plot(v0=[5e4, 0], fun=gear)
 
-    energy_variation_vs_t_plot(v0=[5e4, 0], fun=verlett)
+    # energy_variation_vs_t_plot(v0=[5e4, 0], fun=gear)
 
-    # print(ff_pot_energy)
+    # trajectory_vs_v0_plot(fun=gear)
 
-    # absortion_escape_plot(fun=verlett)
+    # absortion_escape_plot(fun=gear)
 
-    # trajectory_pdf_plot(fun=verlett)
+    trajectory_pdf_plot(fun=gear)
