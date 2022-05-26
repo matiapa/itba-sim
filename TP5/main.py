@@ -17,12 +17,12 @@ m = 0.01    # (kg)
 kn = 1e5    # (N/m)
 kt = 2*kn   # (N/m)
 g = 9.81    # m/s^2
-N = 1000
 
 # Parametros de la simulacion
 
 dt = 0.1 * sqrt(m/kn)
 max_step = 1e5
+Zl, Zw = (L,W) / 0.06
 
 # 0      W
 # |      |  L
@@ -45,7 +45,7 @@ def f(Rt, Vt, D):
 
     # Calculamos las fuerzas debido al contacto con otras particulas
 
-    neighbours = get_neighbours(Rt, D, L)
+    neighbours = get_neighbours(Rt, D, L, W, Zl, Zw, 0)
     
     for i in range(N):
         for j in neighbours[i]:
@@ -159,25 +159,32 @@ def beeman(R0, V0, D):
 
 # ---------------------------------------------------------
 
-def random_init():
-    R = []
+def random_init(N):
+    R0 = []
     D = []
+
+    # Randomly create N particles
     
     for _ in range(N):
-        R.append( [random()*W, random()*L] )
+        R0.append( [random()*W, random()*L] )
         D.append( random()*0.01 + 0.02 )
 
-    # TODO: Remove neighbours
+    # Remove particles that are overlapping
 
-    N = len(R)
+    neighbours = get_neighbours(R0, D, L, W, Zl, Zw, 0)
+
+    for i in range(len(neighbours)):
+        for j in neighbours[i]:
+            del R0[j]
+            del D[j]
+            del neighbours[j][i]
+
     print(f'Created {N} particles')
 
-    return R, D
+    return R0, D, N
 
 
-if __name__ == '__main__':
+R0, D, N = random_init(1000)
+V0 = np.zeros((N,2))
 
-    R0, D = random_init()
-    V0 = np.zeros((N,2))
-
-    beeman(R0, V0, D)
+beeman(R0, V0, D)

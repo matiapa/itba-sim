@@ -8,5 +8,5 @@ from typing import List
 # d: Distancia minima para considerar vecinos
 # Devuelve los indices de las particulas vecinas
 
-def get_neighbours(R, D, L) -> List[List[int]]:
+def get_neighbours(R, D, L, W, Zl, Zw, rc) -> List[List[int]]:
     raise NotImplemented()
