@@ -1,5 +1,7 @@
 from typing import List
 
+import numpy as np
+
 # Modelo de la fuerza sobre una particula
 # Rt: [[r0x,r0y], ..., [rnx,rny]]
 # Vt: [[v0x,v0y], ..., [vnx,vny]]
@@ -9,4 +11,5 @@ from typing import List
 # Devuelve los indices de las particulas vecinas
 
 def get_neighbours(R, D, L, W, Zl, Zw, rc) -> List[List[int]]:
-    raise NotImplemented()
+    N = len(R)
+    return [[] for i in range(N)]

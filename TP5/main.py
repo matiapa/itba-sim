@@ -17,12 +17,18 @@ m = 0.01    # (kg)
 kn = 1e5    # (N/m)
 kt = 2*kn   # (N/m)
 g = 9.81    # m/s^2
+N = 5
 
 # Parametros de la simulacion
 
+tf = 1
 dt = 0.1 * sqrt(m/kn)
-max_step = 1e5
-Zl, Zw = (L,W) / 0.06
+Zl, Zw = L/0.06, W/0.06
+
+# Parametros de la animacion
+
+fps = 48
+anim_step = int((1/fps) / dt)
 
 # 0      W
 # |      |  L
@@ -38,9 +44,6 @@ Zl, Zw = (L,W) / 0.06
 # Returns [[f0x,f0y], ..., [fnx,fny]]
 
 def f(Rt, Vt, D):
-    if Rt.shape != (N,2) or Vt.shape != (N,2):
-        raise Exception("Dimension of given position/velocity matrix is invalid")
-
     forces = np.tile(np.array([0, -m*g]), (N,1))
 
     # Calculamos las fuerzas debido al contacto con otras particulas
@@ -104,16 +107,14 @@ def f(Rt, Vt, D):
 # V0: [[v0x,v0y], ..., [vnx,vny]]
 # Returns [R0, ..., Rt], [V0, ..., Vt]
 
-def beeman(R0, V0, D):
+def beeman(R0, V0, D, ovito):
     # Creamos las matrices de posiciones y velocidades
 
-    R = np.zeros(max_step, N, 2)
-    V = np.zeros(max_step, N, 2)
+    steps = int(tf/dt)
+    R = np.zeros((steps, N, 2))
+    V = np.zeros((steps, N, 2))
 
     # Inicializamos el problema con las condiciones iniciales
-
-    if R0.shape != (N,2) or V0.shape != (N,2):
-        raise Exception("Dimension of given position/velocity matrix is invalid")
 
     R[0] = R0
     V[0] = V0
@@ -121,7 +122,7 @@ def beeman(R0, V0, D):
 
     # Iteramos hasta el maximo paso
 
-    while step < max_step:
+    while step < steps - 1:
         
         # Reinsertamos las particulas que hayan escapado
         for i in range(N):
@@ -147,13 +148,29 @@ def beeman(R0, V0, D):
         vp = V[step] + 3/2 * a_t * dt - 1/2 * a_t_less_dt * dt
 
         # Evaluamos las proximas aceleraciones
-        a_t_plus_dt = f(R[step+1], vp) / m
+        a_t_plus_dt = f(R[step+1], vp, D) / m
 
         # Corregimos las proximas velocidades
         V[step+1] = V[step] + 1/3 * a_t_plus_dt * dt + 5/6 * a_t * dt - 1/6 * a_t_less_dt * dt
 
         # Avanzamos el tiempo de la simulacion
         step += 1
+
+    # Guardamos el archivo de animacion
+    
+    if ovito:
+        lb = min_y
+        with open('out.xyz', 'w') as file:
+            
+            for i in range(0, steps, anim_step):
+                file.write(f'{N+4}\n\n')
+                file.write(f'0 0 {lb} 1e-15 255 255 255\n')
+                file.write(f'0 0 {L} 1e-15 255 255 255\n')
+                file.write(f'0 {W} {lb} 1e-15 255 255 255\n')
+                file.write(f'0 {W} {L} 1e-15 255 255 255\n')
+                
+                for j in range(N):
+                    file.write('{} {} {} {} 0 0 0\n'.format(j+1, R[i][j][0], R[i][j][1], D[j]))
 
     return R,V
 
@@ -166,8 +183,10 @@ def random_init(N):
     # Randomly create N particles
     
     for _ in range(N):
-        R0.append( [random()*W, random()*L] )
-        D.append( random()*0.01 + 0.02 )
+        d = random()*0.01 + 0.02
+        D.append(d)
+        x, y = np.random.uniform(d, W-d), np.random.uniform(d, L-d)
+        R0.append([x,y])
 
     # Remove particles that are overlapping
 
@@ -184,7 +203,7 @@ def random_init(N):
     return R0, D, N
 
 
-R0, D, N = random_init(1000)
+R0, D, N = random_init(N)
 V0 = np.zeros((N,2))
 
-beeman(R0, V0, D)
+R, V = beeman(R0, V0, D, True)
