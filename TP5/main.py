@@ -4,6 +4,7 @@ import numpy as np
 from numpy.linalg import norm
 from tqdm import tqdm
 from cim import get_neighbours
+import math
 
 # ---------------------------------------------------------
 
@@ -23,7 +24,8 @@ g = 9.81    # m/s^2
 
 tf = 0.5
 dt = 0.1 * sqrt(m/kn)
-Zl, Zw = L/0.06, W/0.06
+Zl = math.ceil(L/0.06)
+Zw = math.ceil(W/0.06)
 
 # Parametros de la animacion
 
@@ -169,15 +171,14 @@ def beeman(R0, V0, D, animate):
             
             for i in range(0, steps, anim_step):
                 file.write(f'{N+5}\n\n')
-
-                file.write(f'0 0 {lb} 1e-15 255 255 255\n')
-                file.write(f'0 0 {L} 1e-15 255 255 255\n')
-                file.write(f'0 {W} {lb} 1e-15 255 255 255\n')
-                file.write(f'0 {W} {L} 1e-15 255 255 255\n')
-                file.write(f'0 0 0 0.01 255 0 0\n')
+                file.write(f'{N+1} 0 {lb} 1e-15 255 255 255\n')
+                file.write(f'{N+1} 0 {L} 1e-15 255 255 255\n')
+                file.write(f'{N+1} {W} {lb} 1e-15 255 255 255\n')
+                file.write(f'{N+1} {W} {L} 1e-15 255 255 255\n')
+                file.write(f'{N+1} 0 0 0.01 255 0 0\n')
                 
                 for j in range(N):
-                    file.write('{} {} {} {} 0 0 0\n'.format(j+1, R[i][j][0], R[i][j][1], D[j]))
+                    file.write('{} {} {} {} 0 0 0\n'.format(j, R[i][j][0], R[i][j][1], D[j]))
 
     return R,V
 
@@ -216,6 +217,7 @@ def simulate(N, animate):
     V0 = np.zeros_like(R0)
     return beeman(R0, V0, D, animate)
 
+
 def simulate_det(R0, D, animate):
     V0 = np.zeros_like(R0)
     return beeman(R0, V0, D, animate)
@@ -226,4 +228,4 @@ if __name__ == '__main__':
     # R0 = [np.array([W/4, L/4]), np.array([W/4+0.01, L*3/4])]
     # D = [0.03, 0.02]
     # simulate_det(R0, D, animate=True)
-    simulate(5, True)
+    simulate(100, True)
