@@ -1,38 +1,35 @@
 from matplotlib import pyplot as plt
 import numpy as np
-from main import m, g, simulate, simulate_det, W, L
+import pandas
+from main import m, g, dt, simulate
+
+def parse_file(filename):
+    print('Reading file...')
+    df = pandas.read_csv(filename)
+    R, V = [], []
+
+    print('Parsing file...')
+    for _, t_df in df.groupby('t'):
+        R.append( t_df[['x','y']].to_numpy() )
+        V.append( t_df[['vx','vy']].to_numpy() )
+
+    return R, V
 
 
-def energy_check():
-    R0 = [np.array([W/4, L/4]), np.array([W/4+0.01, L*3/4])]
-    D = [0.03, 0.02]
-    R, V = simulate_det(R0, D, animate=True)
-    # R, V = simulate(N=1, animate=True)
+def kinetic_energy_plot(filename):
+    R, V = parse_file(filename)
 
-    up, uk, maxdiff = [], [], 0
+    uk= []
     for s in range(len(R)):
-        Rt, Vt = R[s], V[s]
-
-        up.append( sum(m * g * Rt[:,1]) )
-        
+        _, Vt = R[s], V[s]     
         uk.append( sum(0.5 * m * (Vt[:,0]**2+Vt[:,1]**2)) )
-
-        diff = abs(up[-1]+uk[-1] - (up[0]+uk[0])) / (up[0]+uk[0])
-        if diff > 0.01:
-            print(f'{diff*100}% variation at step {s}')
-        
-        maxdiff = max(maxdiff, diff)
-
-    print(f'Max energy variation: {maxdiff*100}%')
     
-    steps = range(len(R))
-    plt.plot(steps, up, label='Potential')
-    plt.plot(steps, uk, label='Kinetic')
-    plt.plot(steps, np.array(up) + np.array(uk), label='Total')
+    times = np.arange(0, len(R)*dt, dt)
+    plt.plot(times, uk)
 
-    plt.xlabel('Step')
-    plt.ylabel('Energy (J)')
-    plt.legend()
+    plt.xlabel('Time (s)')
+    plt.ylabel('Kinetic Energy (J)')
+    plt.yscale('Log')
     plt.show()
 
-energy_check()
+kinetic_energy_plot('out.csv')

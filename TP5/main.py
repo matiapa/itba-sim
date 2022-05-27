@@ -1,41 +1,38 @@
+from cim import get_neighbours
 from math import hypot, sqrt
-from random import random
-import numpy as np
 from numpy.linalg import norm
 from tqdm import tqdm
-from cim import get_neighbours
+import numpy as np
 import math
 
 # ---------------------------------------------------------
 
-# Parametros del sistema
+neighbours = []
 
-L = 1       # L ε [1.00, 1.50] (m)
-W = 0.3     # W ε [0.30, 0.40] (m)
-A = 0.15    # A ε [0.15, 0.25] (m)
-min_y = -L/10
 
-m = 0.01    # (kg)
-kn = 10**5    # (N/m)
-kt = 2*kn   # (N/m)
-g = 9.81    # m/s^2
+def neighbours_at(Rt, D, step):
+    if step == None:
+        zy_size, zy_count = 0.06, math.ceil((L-min_y)/0.06)
+        zx_size, zx_count = 0.06, math.ceil(W/0.06)
+        return get_neighbours(Rt, D, zy_size, zx_size, zy_count, zx_count, 0)
 
-# Parametros de la simulacion
+    if step == len(neighbours):
+        zy_size, zy_count = 0.06, math.ceil((L-min_y)/0.06)
+        zx_size, zx_count = 0.06, math.ceil(W/0.06)
+        neighbours.append( get_neighbours(Rt, D, zy_size, zx_size, zy_count, zx_count, 0) )
 
-tf = 0.5
-dt = 0.05 * sqrt(m/kn)
+    return neighbours[step]
 
-# Parametros de la animacion
 
-fps = 48*4
-anim_step = int((1/fps) / dt)
-# anim_step = 1
-
-# 0      W
-# |      |  L
-# |      |
-# |__  __|  0
-#    A
+def reinsert_particle(Rt, Vt, D, i):
+    while True:
+        x = np.random.uniform(D[i], W-D[i])
+        y = np.random.uniform(L-6*D[i], L-D[i])
+        p = lambda j : hypot(x-Rt[j][0], y-Rt[j][1]) > D[i]+D[j]
+        if all([p(j) for j in range(len(Rt))]):
+            break
+    Rt[i] = np.array([x, y])
+    Vt[i] = np.array([0, 0])
 
 # ---------------------------------------------------------
 
@@ -44,15 +41,13 @@ anim_step = int((1/fps) / dt)
 # Vt: [[v0x,v0y], ..., [vnx,vny]]
 # Returns [[f0x,f0y], ..., [fnx,fny]]
 
-def f(Rt, Vt, D):
+def f(Rt, Vt, D, step):
     N = len(Rt)
     forces = np.tile(np.array([0, -m*g]), (N,1))
 
     # Calculamos las fuerzas debido al contacto con otras particulas
 
-    zy_size, zy_count = 0.06, math.ceil((L-min_y)/0.06)
-    zx_size, zx_count = 0.06, math.ceil(W/0.06)
-    neighbours = get_neighbours(Rt, D, zy_size, zx_size, zy_count, zx_count, 0)
+    neighbours = neighbours_at(Rt, D, step)
     
     for i in range(N):
         for j in neighbours[i]:
@@ -87,7 +82,7 @@ def f(Rt, Vt, D):
                 'en': np.array([0, 1]),  'zeta_ip': D[i] - (L - Rt[i][1])
             },
             {   # Pared abajo
-                'collides': (Rt[i][1] - 0) <= D[i] and (Rt[i][0] <= (W-A)/2 or Rt[i][0] >= (W+A)/2),
+                'collides': (Rt[i][1] - 0) <= D[i] and (Rt[i][0] <= (W-Ap)/2 or Rt[i][0] >= (W+Ap)/2),
                 'en': np.array([0, -1]),  'zeta_ip': D[i] - (Rt[i][1] - 0)
             }
         ]
@@ -110,18 +105,20 @@ def f(Rt, Vt, D):
 
     return forces
 
+
 # Algoritmo de integracion
 # R0: [[r0x,r0y], ..., [rnx,rny]]
 # V0: [[v0x,v0y], ..., [vnx,vny]]
 # Returns [R0, ..., Rt], [V0, ..., Vt]
 
-def beeman(R0, V0, D, animate):
+def beeman(R0, V0, D):
     # Creamos las matrices de posiciones y velocidades
 
     steps = int(tf/dt)
     N = len(R0)
     R = np.zeros((steps, N, 2))
     V = np.zeros((steps, N, 2))
+    A = np.zeros((steps, N, 2))
 
     # Inicializamos el problema con las condiciones iniciales
 
@@ -131,69 +128,51 @@ def beeman(R0, V0, D, animate):
 
     # Iteramos hasta el maximo paso
 
-    file = open('out.xyz', 'w')
+    undesired_reinsertions = 0
 
     for step in tqdm(range(steps-1)):
-        
-        # Reinsertamos las particulas que hayan escapado
-        for i in range(N):
-            if R[step][i][1] <= min_y:
 
-                while True:
-                    x = np.random.uniform(D[i], W-D[i])
-                    y = np.random.uniform(L-6*D[i], L-D[i])
-                    p = lambda j : hypot(x-R[step][j][0], y-R[step][j][1]) > D[i]+D[j]
-                    if all([p(j) for j in range(N)]):
-                        break
-                
-                R[step][i] = np.array([x, y])
-                V[step][i] = np.array([0, 0])
+        # --- Calculo de la proxima posicion ---
 
         # Calculamos las aceleraciones en el paso actual
-        a_t = f(R[step], V[step], D) / m
+        A[step] = f(R[step], V[step], D, step) / m
 
-        # Calculamos las aceleraciones en el paso anterior
+        # Obtenemos las aceleraciones del paso anterior
         if step > 0:
-            a_t_less_dt = f(R[step-1], V[step-1], D) / m
+            a_t_less_dt = A[step-1]
         else:
-            v_prev = V[0] - dt * a_t
-            r_prev = R[0] - dt*v_prev - (dt**2) * a_t/2
-            a_t_less_dt = f(r_prev, v_prev, D) / m
+            v_prev = V[0] - dt * A[step]
+            r_prev = R[0] - dt*v_prev - (dt**2) * A[step]/2
+            a_t_less_dt = f(r_prev, v_prev, D, None) / m
 
         # Obtenemos las proximas posiciones
-        R[step+1] = R[step] + V[step]*dt + 2/3 * a_t * dt**2 - 1/6 * a_t_less_dt * dt**2
+        R[step+1] = R[step] + V[step]*dt + 2/3 * A[step] * dt**2 - 1/6 * a_t_less_dt * dt**2
+
+        # Reinsertamos las particulas que hayan escapado
+        
+        for i in range(N):
+            if R[step+1][i][1] <= min_y:
+                reinsert_particle(R[step+1], V[step+1], D, i)
+            if R[step+1][i][1] > L or R[step+1][i][0] < 0 or R[step+1][i][0] > W:
+                reinsert_particle(R[step+1], V[step+1], D, i)
+                undesired_reinsertions += 1
+
+
+        # --- Calculo de la proxima velocidad ---
 
         # Predecimos las proximas velocidades
-        vp = V[step] + 3/2 * a_t * dt - 1/2 * a_t_less_dt * dt
+        vp = V[step] + 3/2 * A[step] * dt - 1/2 * a_t_less_dt * dt
 
-        # Evaluamos las proximas aceleraciones
-        a_t_plus_dt = f(R[step+1], vp, D) / m
+        # Predecimos las proximas aceleraciones
+        a_t_plus_dt = f(R[step+1], vp, D, step+1) / m
 
-        # print(f'{step}: {a_t_less_dt} {a_t} {a_t_plus_dt}')
-
-        # Corregimos las proximas velocidades
-        V[step+1] = V[step] + 1/3 * a_t_plus_dt * dt + 5/6 * a_t * dt - 1/6 * a_t_less_dt * dt
+        # Recalculamos las proximas velocidades
+        V[step+1] = V[step] + 1/3 * a_t_plus_dt * dt + 5/6 * A[step] * dt - 1/6 * a_t_less_dt * dt
 
         # Avanzamos el tiempo de la simulacion
         step += 1
 
-    # Guardamos el archivo de animacion
-    
-    if animate:
-        lb = min_y
-        with open('out.xyz', 'w') as file:
-            
-            for i in range(0, steps, anim_step):
-                file.write(f'{N+6}\n\n')
-                file.write(f'{N+1} 0 {lb} 1e-15 255 255 255\n')
-                file.write(f'{N+1} 0 {L} 1e-15 255 255 255\n')
-                file.write(f'{N+1} {W} {lb} 1e-15 255 255 255\n')
-                file.write(f'{N+1} {W} {L} 1e-15 255 255 255\n')
-                file.write(f'{N+1} {(W-A)/2} 0 0.01 255 0 0\n')
-                file.write(f'{N+1} {(W+A)/2} 0 0.01 255 0 0\n')
-                
-                for j in range(N):
-                    file.write('{} {} {} {} 0 0 0\n'.format(j, R[i][j][0], R[i][j][1], D[j]))
+    print(f'Undesired reinsertions: {undesired_reinsertions}')
 
     return R,V
 
@@ -204,46 +183,92 @@ def random_init(N):
 
     # Randomly create N particles
     
-    for _ in range(N):
-        d = random()*0.01 + 0.02
-        D.append(d)
-        x, y = np.random.uniform(d, W-d), np.random.uniform(d, L-d)
-        R0.append(np.array([x,y]))
+    while len(R0) < N:
+        for _ in range(N):
+            d = np.random.uniform(0.005, 0.015)
+            D.append(d)
+            x, y = np.random.uniform(d, W-d), np.random.uniform(d, L-d)
+            R0.append(np.array([x,y]))
 
-    # Remove particles that are overlapping
+        # Remove particles that are overlapping
 
-    R0_n, D_n, avoid = [], [], set()
+        R0_n, D_n, avoid = [], [], set()
 
-    zy_size, zy_count = 0.06, math.ceil((L-min_y)/0.06)
-    zx_size, zx_count = 0.06, math.ceil(W/0.06)
-    neighbours = get_neighbours(R0, D, zy_size, zx_size, zy_count, zx_count, 0)
+        zy_size, zy_count = 0.06, math.ceil((L-min_y)/0.06)
+        zx_size, zx_count = 0.06, math.ceil(W/0.06)
+        neighbours = get_neighbours(R0, D, zy_size, zx_size, zy_count, zx_count, 0)
 
-    for i in range(len(neighbours)):
-        if i not in avoid:
-            R0_n.append(R0[i])
-            D_n.append(D[i])
-        for j in neighbours[i]:
-            avoid.add(j)
+        for i in range(len(neighbours)):
+            if i not in avoid:
+                R0_n.append(R0[i])
+                D_n.append(D[i])
+            for j in neighbours[i]:
+                avoid.add(j)
 
-    print(f'Created {len(R0_n)} particles')
+        R0, D = R0_n, D_n
+    
+    if len(R0) > N:
+        R0 = R0[:N]
+        D = D[:N]
 
-    return R0_n, D_n
+    print(f'Created {len(R0)} particles')
 
+    return R0, D
 
-def simulate(N, animate):
+# ---------------------------------------------------------
+
+# Parametros fijos
+
+L = 1       # L ε [1.00, 1.50] (m)
+W = 0.3     # W ε [0.30, 0.40] (m)
+min_y = -L/10
+m = 0.01    # (kg)
+kn = 10**5  # (N/m)
+g = 9.81    # m/s^2
+
+# Parametros variables
+
+Ap = 0.0
+kt = 2*kn
+tf = 1
+dt = 0.1 * sqrt(m/kn)
+N = 50
+
+fps = 48*4
+anim_step = int((1/fps) / dt)
+
+# ---------------------------------------------------------
+
+def simulate():
+    # Corremos la simulacion
+
     R0, D = random_init(N)
     V0 = np.zeros_like(R0)
-    return beeman(R0, V0, D, animate)
+    R,V = beeman(R0, V0, D)
 
+    # Guardamos los archivos de output
 
-def simulate_det(R0, D, animate):
-    V0 = np.zeros_like(R0)
-    return beeman(R0, V0, D, animate)
+    print('Saving files...')
+    
+    out_file = open('out.csv', 'w')
+    anim_file = open('out.xyz', 'w')
 
+    out_file.write('t,id,x,y,vx,vy\n')    
+    for s in range(len(R)):
+        for i in range(N):
+            out_file.write(f'{s},{i},{R[s][i][0]},{R[s][i][1]},{V[s][i][0]},{V[s][i][1]}\n')
+
+        if s % anim_step == 0:
+            anim_file.write(f'{N+6}\n\n')
+            anim_file.write(f'{N+1} 0 {min_y} 0 0 1e-15 255 255 255\n')
+            anim_file.write(f'{N+1} 0 {L} 0 0 1e-15 255 255 255\n')
+            anim_file.write(f'{N+1} {W} {min_y} 0 0 1e-15 255 255 255\n')
+            anim_file.write(f'{N+1} {W} {L} 0 0 1e-15 255 255 255\n')
+            anim_file.write(f'{N+1} {(W-Ap)/2} 0 0 0 0.01 255 0 0\n')
+            anim_file.write(f'{N+1} {(W+Ap)/2} 0 0 0 0.01 255 0 0\n')
+            
+            for i in range(N):
+                anim_file.write(f'{i} {R[s][i][0]} {R[s][i][1]} {V[s][i][0]} {V[s][i][1]} {D[i]} 0 0 0\n')
 
 if __name__ == '__main__':
-    # A = 0
-    # R0 = [np.array([W/4, L/4]), np.array([W/4+0.01, L*3/4])]
-    # D = [0.03, 0.02]
-    # simulate_det(R0, D, animate=True)
-    simulate(100, True)
+    simulate()
