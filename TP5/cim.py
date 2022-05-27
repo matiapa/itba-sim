@@ -12,4 +12,11 @@ import numpy as np
 
 def get_neighbours(R, D, L, W, Zl, Zw, rc) -> List[List[int]]:
     N = len(R)
-    return [[] for i in range(N)]
+
+    neighbours = [[] for _ in range(N)]
+    for i in range(len(R)):
+        for j in range(len(R)):
+            if i != j and np.linalg.norm(R[i] - R[j]) <= D[i] + D[j]:
+                neighbours[i].append(j)
+                
+    return neighbours

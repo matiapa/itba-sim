@@ -2,6 +2,7 @@ from math import sqrt
 from random import random
 import numpy as np
 from numpy.linalg import norm
+from tqdm import tqdm
 from cim import get_neighbours
 
 # ---------------------------------------------------------
@@ -14,14 +15,13 @@ A = 0.15    # A ε [0.15, 0.25] (m)
 min_y = -L/10
 
 m = 0.01    # (kg)
-kn = 1e5    # (N/m)
+kn = 10**5    # (N/m)
 kt = 2*kn   # (N/m)
 g = 9.81    # m/s^2
-N = 5
 
 # Parametros de la simulacion
 
-tf = 1
+tf = 0.5
 dt = 0.1 * sqrt(m/kn)
 Zl, Zw = L/0.06, W/0.06
 
@@ -29,6 +29,7 @@ Zl, Zw = L/0.06, W/0.06
 
 fps = 48
 anim_step = int((1/fps) / dt)
+# anim_step = 1
 
 # 0      W
 # |      |  L
@@ -44,6 +45,7 @@ anim_step = int((1/fps) / dt)
 # Returns [[f0x,f0y], ..., [fnx,fny]]
 
 def f(Rt, Vt, D):
+    N = len(Rt)
     forces = np.tile(np.array([0, -m*g]), (N,1))
 
     # Calculamos las fuerzas debido al contacto con otras particulas
@@ -52,7 +54,7 @@ def f(Rt, Vt, D):
     
     for i in range(N):
         for j in neighbours[i]:
-            zeta_ij = 2*D[i] - norm(Rt[j] - Rt[i])
+            zeta_ij = D[i] + D[j] - norm(Rt[j] - Rt[i])
             v_rel = Vt[i] - Vt[j]
 
             en = (Rt[j] - Rt[i]) / norm(Rt[j] - Rt[i])
@@ -107,10 +109,11 @@ def f(Rt, Vt, D):
 # V0: [[v0x,v0y], ..., [vnx,vny]]
 # Returns [R0, ..., Rt], [V0, ..., Vt]
 
-def beeman(R0, V0, D, ovito):
+def beeman(R0, V0, D, animate):
     # Creamos las matrices de posiciones y velocidades
 
     steps = int(tf/dt)
+    N = len(R0)
     R = np.zeros((steps, N, 2))
     V = np.zeros((steps, N, 2))
 
@@ -122,7 +125,7 @@ def beeman(R0, V0, D, ovito):
 
     # Iteramos hasta el maximo paso
 
-    while step < steps - 1:
+    for step in tqdm(range(steps-1)):
         
         # Reinsertamos las particulas que hayan escapado
         for i in range(N):
@@ -150,6 +153,8 @@ def beeman(R0, V0, D, ovito):
         # Evaluamos las proximas aceleraciones
         a_t_plus_dt = f(R[step+1], vp, D) / m
 
+        # print(f'{step}: {a_t_less_dt} {a_t} {a_t_plus_dt}')
+
         # Corregimos las proximas velocidades
         V[step+1] = V[step] + 1/3 * a_t_plus_dt * dt + 5/6 * a_t * dt - 1/6 * a_t_less_dt * dt
 
@@ -158,16 +163,18 @@ def beeman(R0, V0, D, ovito):
 
     # Guardamos el archivo de animacion
     
-    if ovito:
+    if animate:
         lb = min_y
         with open('out.xyz', 'w') as file:
             
             for i in range(0, steps, anim_step):
-                file.write(f'{N+4}\n\n')
+                file.write(f'{N+5}\n\n')
+
                 file.write(f'0 0 {lb} 1e-15 255 255 255\n')
                 file.write(f'0 0 {L} 1e-15 255 255 255\n')
                 file.write(f'0 {W} {lb} 1e-15 255 255 255\n')
                 file.write(f'0 {W} {L} 1e-15 255 255 255\n')
+                file.write(f'0 0 0 0.01 255 0 0\n')
                 
                 for j in range(N):
                     file.write('{} {} {} {} 0 0 0\n'.format(j+1, R[i][j][0], R[i][j][1], D[j]))
@@ -177,8 +184,7 @@ def beeman(R0, V0, D, ovito):
 # ---------------------------------------------------------
 
 def random_init(N):
-    R0 = []
-    D = []
+    R0, D = [], []
 
     # Randomly create N particles
     
@@ -186,24 +192,38 @@ def random_init(N):
         d = random()*0.01 + 0.02
         D.append(d)
         x, y = np.random.uniform(d, W-d), np.random.uniform(d, L-d)
-        R0.append([x,y])
+        R0.append(np.array([x,y]))
 
     # Remove particles that are overlapping
 
+    R0_n, D_n, avoid = [], [], set()
     neighbours = get_neighbours(R0, D, L, W, Zl, Zw, 0)
 
     for i in range(len(neighbours)):
+        if i not in avoid:
+            R0_n.append(R0[i])
+            D_n.append(D[i])
         for j in neighbours[i]:
-            del R0[j]
-            del D[j]
-            del neighbours[j][i]
+            avoid.add(j)
 
-    print(f'Created {N} particles')
+    print(f'Created {len(R0_n)} particles')
 
-    return R0, D, N
+    return R0_n, D_n
 
 
-R0, D, N = random_init(N)
-V0 = np.zeros((N,2))
+def simulate(N, animate):
+    R0, D = random_init(N)
+    V0 = np.zeros_like(R0)
+    return beeman(R0, V0, D, animate)
 
-R, V = beeman(R0, V0, D, True)
+def simulate_det(R0, D, animate):
+    V0 = np.zeros_like(R0)
+    return beeman(R0, V0, D, animate)
+
+
+if __name__ == '__main__':
+    A = 0.01
+    # R0 = [np.array([W/4, L/4]), np.array([W/4+0.01, L*3/4])]
+    # D = [0.03, 0.02]
+    # simulate_det(R0, D, animate=True)
+    simulate(5, True)
