@@ -1,4 +1,4 @@
-from math import sqrt
+from math import hypot, sqrt
 from random import random
 import numpy as np
 from numpy.linalg import norm
@@ -23,13 +23,11 @@ g = 9.81    # m/s^2
 # Parametros de la simulacion
 
 tf = 0.5
-dt = 0.1 * sqrt(m/kn)
-Zl = math.ceil(L/0.06)
-Zw = math.ceil(W/0.06)
+dt = 0.05 * sqrt(m/kn)
 
 # Parametros de la animacion
 
-fps = 48
+fps = 48*4
 anim_step = int((1/fps) / dt)
 # anim_step = 1
 
@@ -52,7 +50,9 @@ def f(Rt, Vt, D):
 
     # Calculamos las fuerzas debido al contacto con otras particulas
 
-    neighbours = get_neighbours(Rt, D, L, W, Zl, Zw, 0)
+    zy_size, zy_count = 0.06, math.ceil((L-min_y)/0.06)
+    zx_size, zx_count = 0.06, math.ceil(W/0.06)
+    neighbours = get_neighbours(Rt, D, zy_size, zx_size, zy_count, zx_count, 0)
     
     for i in range(N):
         for j in neighbours[i]:
@@ -81,6 +81,10 @@ def f(Rt, Vt, D):
             {   # Pared derecha
                 'collides': (W - Rt[i][0]) <= D[i] and Rt[i][1] >=0, 
                 'en': np.array([1, 0]),   'zeta_ip': D[i] - (W - Rt[i][0])
+            },
+            {   # Pared arriba
+                'collides': (L - Rt[i][1]) <= D[i],
+                'en': np.array([0, 1]),  'zeta_ip': D[i] - (L - Rt[i][1])
             },
             {   # Pared abajo
                 'collides': (Rt[i][1] - 0) <= D[i] and (Rt[i][0] <= (W-A)/2 or Rt[i][0] >= (W+A)/2),
@@ -127,12 +131,22 @@ def beeman(R0, V0, D, animate):
 
     # Iteramos hasta el maximo paso
 
+    file = open('out.xyz', 'w')
+
     for step in tqdm(range(steps-1)):
         
         # Reinsertamos las particulas que hayan escapado
         for i in range(N):
             if R[step][i][1] <= min_y:
-                R[step][i] = np.array([R[step][i][0], L])
+
+                while True:
+                    x = np.random.uniform(D[i], W-D[i])
+                    y = np.random.uniform(L-6*D[i], L-D[i])
+                    p = lambda j : hypot(x-R[step][j][0], y-R[step][j][1]) > D[i]+D[j]
+                    if all([p(j) for j in range(N)]):
+                        break
+                
+                R[step][i] = np.array([x, y])
                 V[step][i] = np.array([0, 0])
 
         # Calculamos las aceleraciones en el paso actual
@@ -170,12 +184,13 @@ def beeman(R0, V0, D, animate):
         with open('out.xyz', 'w') as file:
             
             for i in range(0, steps, anim_step):
-                file.write(f'{N+5}\n\n')
+                file.write(f'{N+6}\n\n')
                 file.write(f'{N+1} 0 {lb} 1e-15 255 255 255\n')
                 file.write(f'{N+1} 0 {L} 1e-15 255 255 255\n')
                 file.write(f'{N+1} {W} {lb} 1e-15 255 255 255\n')
                 file.write(f'{N+1} {W} {L} 1e-15 255 255 255\n')
-                file.write(f'{N+1} 0 0 0.01 255 0 0\n')
+                file.write(f'{N+1} {(W-A)/2} 0 0.01 255 0 0\n')
+                file.write(f'{N+1} {(W+A)/2} 0 0.01 255 0 0\n')
                 
                 for j in range(N):
                     file.write('{} {} {} {} 0 0 0\n'.format(j, R[i][j][0], R[i][j][1], D[j]))
@@ -198,7 +213,10 @@ def random_init(N):
     # Remove particles that are overlapping
 
     R0_n, D_n, avoid = [], [], set()
-    neighbours = get_neighbours(R0, D, L, W, Zl, Zw, 0)
+
+    zy_size, zy_count = 0.06, math.ceil((L-min_y)/0.06)
+    zx_size, zx_count = 0.06, math.ceil(W/0.06)
+    neighbours = get_neighbours(R0, D, zy_size, zx_size, zy_count, zx_count, 0)
 
     for i in range(len(neighbours)):
         if i not in avoid:
@@ -224,7 +242,7 @@ def simulate_det(R0, D, animate):
 
 
 if __name__ == '__main__':
-    A = 0.01
+    # A = 0
     # R0 = [np.array([W/4, L/4]), np.array([W/4+0.01, L*3/4])]
     # D = [0.03, 0.02]
     # simulate_det(R0, D, animate=True)
