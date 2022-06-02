@@ -1,7 +1,7 @@
 from matplotlib import pyplot as plt
 import numpy as np
 import pandas
-from main import m, g, dt, simulate
+from python.main import m, g, dt, simulate
 
 def parse_file(filename):
     print('Reading file...')

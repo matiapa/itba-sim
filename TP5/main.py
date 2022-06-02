@@ -1,24 +1,22 @@
-from cim import get_neighbours
-from math import hypot, sqrt
-from numpy.linalg import norm
-from tqdm import tqdm
-import numpy as np
 import math
+from math import hypot, sqrt, ceil
+from cim import get_neighbours
+
+import numpy as np
+from tqdm import tqdm
 
 # ---------------------------------------------------------
 
 neighbours = []
 
-
 def neighbours_at(Rt, D, step):
+    zy_size, zy_count = 2*max_rad, ceil((L-min_y)/(2*max_rad))
+    zx_size, zx_count = 2*max_rad, ceil(W/(2*max_rad))
+
     if step == None:
-        zy_size, zy_count = 0.06, math.ceil((L-min_y)/0.06)
-        zx_size, zx_count = 0.06, math.ceil(W/0.06)
         return get_neighbours(Rt, D, zy_size, zx_size, zy_count, zx_count, 0)
 
     if step == len(neighbours):
-        zy_size, zy_count = 0.06, math.ceil((L-min_y)/0.06)
-        zx_size, zx_count = 0.06, math.ceil(W/0.06)
         neighbours.append( get_neighbours(Rt, D, zy_size, zx_size, zy_count, zx_count, 0) )
 
     return neighbours[step]
@@ -43,31 +41,41 @@ def reinsert_particle(Rt, Vt, D, i):
 
 def f(Rt, Vt, D, step):
     N = len(Rt)
-    forces = np.tile(np.array([0, -m*g]), (N,1))
+    forces = np.zeros((N,2))
+    force_pairs = {}
 
-    # Calculamos las fuerzas debido al contacto con otras particulas
+    # Obtenemos todos los vecinos
 
     neighbours = neighbours_at(Rt, D, step)
     
     for i in range(N):
+        # Sumamos la fuerza de la gravedad
+
+        forces[i][1] += -m*g
+
+        # Calculamos las fuerzas debido al contacto con otras particulas
+
         for j in neighbours[i]:
-            zeta_ij = D[i] + D[j] - norm(Rt[j] - Rt[i])
-            v_rel = Vt[i] - Vt[j]
+            if (j,i) in force_pairs:
+                forces[i] += -force_pairs[(j,i)]
+            else:
+                zeta_ij = D[i] + D[j] - math.dist(Rt[j], Rt[i])
+                v_rel = Vt[i] - Vt[j]
 
-            en = (Rt[j] - Rt[i]) / norm(Rt[j] - Rt[i])
-            et = np.array([-en[1], en[0]])
+                en = (Rt[j] - Rt[i]) / math.dist(Rt[j], Rt[i])
+                et = np.array([-en[1], en[0]])
 
-            fn = -kn * zeta_ij
-            ft = -kt * zeta_ij * np.inner(v_rel, et)
+                fn = -kn * zeta_ij
+                ft = -kt * zeta_ij * np.inner(v_rel, et)
 
-            fx = fn * en[0] - ft * en[1]
-            fy = fn * en[1] + ft * en[0]
+                fx = fn * en[0] - ft * en[1]
+                fy = fn * en[1] + ft * en[0]
 
-            forces[i] += np.array([fx, fy])
+                # force_pairs[(i,j)] = np.array([fx, fy])
+                forces[i] += np.array([fx, fy])
 
-    # Calculamos las fuerzas debido al contacto con las paredes
+        # Calculamos las fuerzas debido al contacto con las paredes
 
-    for i in range(N):
         walls = [
             {   # Pared izquierda
                 'collides': (Rt[i][0] - 0) <= D[i] and Rt[i][1] >=0,
@@ -112,6 +120,7 @@ def f(Rt, Vt, D, step):
 # Returns [R0, ..., Rt], [V0, ..., Vt]
 
 def beeman(R0, V0, D):
+    global sc_neighbours, sc_part_forces
     # Creamos las matrices de posiciones y velocidades
 
     steps = int(tf/dt)
@@ -130,8 +139,7 @@ def beeman(R0, V0, D):
 
     undesired_reinsertions = 0
 
-    for step in tqdm(range(steps-1)):
-
+    for step in tqdm(range(steps-1)):            
         # --- Calculo de la proxima posicion ---
 
         # Calculamos las aceleraciones en el paso actual
@@ -156,7 +164,6 @@ def beeman(R0, V0, D):
             if R[step+1][i][1] > L or R[step+1][i][0] < 0 or R[step+1][i][0] > W:
                 reinsert_particle(R[step+1], V[step+1], D, i)
                 undesired_reinsertions += 1
-
 
         # --- Calculo de la proxima velocidad ---
 
@@ -185,7 +192,7 @@ def random_init(N):
     
     while len(R0) < N:
         for _ in range(N):
-            d = np.random.uniform(0.005, 0.015)
+            d = np.random.uniform(min_rad, max_rad)
             D.append(d)
             x, y = np.random.uniform(d, W-d), np.random.uniform(d, L-d)
             R0.append(np.array([x,y]))
@@ -194,8 +201,8 @@ def random_init(N):
 
         R0_n, D_n, avoid = [], [], set()
 
-        zy_size, zy_count = 0.06, math.ceil((L-min_y)/0.06)
-        zx_size, zx_count = 0.06, math.ceil(W/0.06)
+        zy_size, zy_count = 0.06, ceil((L-min_y)/0.06)
+        zx_size, zx_count = 0.06, ceil(W/0.06)
         neighbours = get_neighbours(R0, D, zy_size, zx_size, zy_count, zx_count, 0)
 
         for i in range(len(neighbours)):
@@ -226,13 +233,16 @@ m = 0.01    # (kg)
 kn = 10**5  # (N/m)
 g = 9.81    # m/s^2
 
+min_rad = 0.005
+max_rad = 0.015
+
 # Parametros variables
 
 Ap = 0.0
 kt = 2*kn
 tf = 1
 dt = 0.1 * sqrt(m/kn)
-N = 50
+N = 100
 
 fps = 48*4
 anim_step = int((1/fps) / dt)
