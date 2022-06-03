@@ -25,7 +25,7 @@ def neighbours_at(Rt, D, step):
 def reinsert_particle(Rt, Vt, D, i):
     while True:
         x = np.random.uniform(D[i], W-D[i])
-        y = np.random.uniform(L-6*D[i], L-D[i])
+        y = np.random.uniform(L-10*D[i], L-D[i])
         p = lambda j : hypot(x-Rt[j][0], y-Rt[j][1]) > D[i]+D[j]
         if all([p(j) for j in range(len(Rt))]):
             break
@@ -157,12 +157,20 @@ def beeman(R0, V0, D):
         R[step+1] = R[step] + V[step]*dt + 2/3 * A[step] * dt**2 - 1/6 * a_t_less_dt * dt**2
 
         # Reinsertamos las particulas que hayan escapado
-        
+        reinserted_particles = []
         for i in range(N):
-            if R[step+1][i][1] <= min_y:
+            if R[step+1][i][1] <= min_y or (R[step+1][i][1] > min_y and R[step+1][i][1] < 0 and (R[step+1][i][0] > W or R[step+1][i][0] < 0)):
                 reinsert_particle(R[step+1], V[step+1], D, i)
-            if R[step+1][i][1] > L or R[step+1][i][0] < 0 or R[step+1][i][0] > W:
+                # A[step] = g
+                reinserted_particles.append(i)
+            elif R[step+1][i][1] > L or (R[step+1][i][0] < 0 and R[step+1][i][1] > 0) or R[step+1][i][0] > W:
+                reinserted_particles.append(i)
+                print("Reinserted particle {} on step {}: {} {} {}".format(i, step+1, R[step+1][i][1] > L, R[step+1][i][0] < 0, R[step+1][i][0] > W))
+                print("Positions before: x:{} y:{} vx:{} vy:{}".format(R[step][i][0], R[step][i][1], V[step][i][0], V[step][i][1]))
+                print("Positions after: x:{} y:{} vx:{} vy:{}".format(R[step+1][i][0], R[step+1][i][1], V[step+1][i][0], V[step+1][i][1]))
                 reinsert_particle(R[step+1], V[step+1], D, i)
+                # A[step] = g
+                print("Reinserted Position: x:{} y:{} vx:{} vy:{}".format(R[step+1][i][0], R[step+1][i][1], V[step+1][i][0], V[step+1][i][1]))
                 undesired_reinsertions += 1
 
         # --- Calculo de la proxima velocidad ---
@@ -175,6 +183,9 @@ def beeman(R0, V0, D):
 
         # Recalculamos las proximas velocidades
         V[step+1] = V[step] + 1/3 * a_t_plus_dt * dt + 5/6 * A[step] * dt - 1/6 * a_t_less_dt * dt
+        for i in reinserted_particles:
+            A[step][i] = np.array([0, -g])
+            V[step+1][i] = np.array([0, 0])
 
         # Avanzamos el tiempo de la simulacion
         step += 1
