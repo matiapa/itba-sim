@@ -249,37 +249,40 @@ max_rad = 0.015
 
 # Parametros variables
 
-Ap = 0.0
+Ap = 0.15  # Ap ε [0.15, 0.25] (m)
 kt = 2*kn
 tf = 1
 dt = 0.1 * sqrt(m/kn)
-N = 100
+N = 300
+
+print(dt)
 
 fps = 48*4
 anim_step = int((1/fps) / dt)
 
 # ---------------------------------------------------------
 
-def simulate():
+def simulate(animate=True):
     # Corremos la simulacion
 
     R0, D = random_init(N)
     V0 = np.zeros_like(R0)
-    R,V = beeman(R0, V0, D)
+    R,V,P = beeman(R0, V0, D)
 
     # Guardamos los archivos de output
 
     print('Saving files...')
     
-    out_file = open('out.csv', 'w')
-    anim_file = open('out.xyz', 'w')
+    out_file = open('out_N{}_Ap{}_tf{}.csv'.format(N, Ap, tf), 'w')
+    anim_file = open('out_N{}_Ap{}_tf{}.xyz'.format(N, Ap, tf), 'w')
 
     out_file.write('t,id,x,y,vx,vy\n')    
     for s in range(len(R)):
+
         for i in range(N):
             out_file.write(f'{s},{i},{R[s][i][0]},{R[s][i][1]},{V[s][i][0]},{V[s][i][1]}\n')
 
-        if s % anim_step == 0:
+        if s % anim_step == 0 and animate:
             anim_file.write(f'{N+6}\n\n')
             anim_file.write(f'{N+1} 0 {min_y} 0 0 1e-15 255 255 255\n')
             anim_file.write(f'{N+1} 0 {L} 0 0 1e-15 255 255 255\n')
@@ -290,6 +293,18 @@ def simulate():
             
             for i in range(N):
                 anim_file.write(f'{i} {R[s][i][0]} {R[s][i][1]} {V[s][i][0]} {V[s][i][1]} {D[i]} 0 0 0\n')
+
+def run(w, l, ap, n):
+    global W, L, Ap, N
+    W = w
+    L = l
+    Ap = ap
+    N = n
+    R0, D = random_init(n)
+    V0 = np.zeros_like(R0)
+    R,V = beeman(R0, V0, D)
+
+    return R,V,D
 
 if __name__ == '__main__':
     simulate()
