@@ -2,10 +2,11 @@ import java.util.Objects;
 
 public class Particle {
 
-    private final int id;
-    private final float x;
-    private final float y;
-    private final float r;
+    public final int id;
+    public float x;
+    public float y;
+    public final float r;
+    public float vx, vy, ax, ay;
 
     public Particle(int id, float x, float y, float r) {
         this.id = id;
@@ -14,7 +15,18 @@ public class Particle {
         this.r = r;
     }
 
-    public double distanceTo(Particle o, int L, boolean usePeriodic) {
+    public Particle(Particle p) {
+        this.id = p.id;
+        this.x = p.x;
+        this.y = p.y;
+        this.r = p.r;
+        this.vx = p.vx;
+        this.vy = p.vy;
+        this.ax = p.ax;
+        this.ay = p.ay;
+    }
+
+    public double distanceTo(Particle o, float L, boolean usePeriodic) {
         double distX = Math.abs(x - o.getX());
 
         if(usePeriodic) {
@@ -59,7 +71,7 @@ public class Particle {
 
     @Override
     public String toString() {
-        return String.valueOf(id);
+        return String.format("(x=%g, y=%g, vx=%g, vy=%g)", x, y, vx, vy);
     }
 
     public int getId() {
