@@ -319,11 +319,11 @@ public class Beeman {
         }
         xyz_fw.close();
 
-//        for (int s = 0; s < particles.size(); s++) {
-//            for(Particle p : particles.get(s)) {
-//                csv_fw.write(String.format("%g %d %g %g %g %g %g\n", s*dt, p.id, p.x, p.y, p.vx, p.vy, p.r));
-//            }
-//        }
+        for (int s = 0; s < particles.size(); s++) {
+            for(Particle p : particles.get(s)) {
+                csv_fw.write(String.format("%g %d %g %g %g %g %g\n", s*dt, p.id, p.x, p.y, p.vx, p.vy, p.r));
+            }
+        }
         csv_fw.close();
     }
 
