@@ -40,6 +40,9 @@ public class CIM {
             int x = (int) (p.getX() / zoneSize);
             int y = (int) (p.getY() / zoneSize);
 
+            if (x < 0 || y < 0)
+                System.out.println("Invlalid");
+
             zones.get(x).get(y).add(p);
         }
 

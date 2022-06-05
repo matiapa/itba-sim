@@ -19,10 +19,10 @@ public class Beeman {
 
     // Variable parameters
 
-    static float Ap = 0.15f;
+    static float Ap = 0;
     static float kt = 2*kn;
     static float dt = (float) (0.1 * sqrt(m/kn));
-    static float tf = 1.5f;
+    static float tf = 4f;
     static int N = 200;
 
     static int fps = 48*4;
@@ -52,6 +52,8 @@ public class Beeman {
 
         float x, y;
 
+        particles.add(p);
+
         while (true) {
             y = (float) (L + min_y - L/2 + Math.random()*(L/2-p.r));
             x = (float) (p.r + Math.random()*(W-2*p.r));
@@ -59,10 +61,20 @@ public class Beeman {
             p.x = x;
             p.y = y;
 
+//            boolean valid = true;
+//            for (Particle p2 : particles) {
+//                if (p.distanceTo(p2, L, false) <= 0 && !p.equals(p2)) {
+//                    valid = false;
+//                    break;
+//                }
+//            }
+//
+//            if (valid)
+//                break;
+
             Map<Particle, Set<Particle>> neighbours = get_neighbours_at(particles, step, true);
-            if (neighbours.get(p).size() == 0) {
+            if (neighbours.get(p).size() == 0)
                 break;
-            }
         }
         p.x = x;
         p.y = y;
@@ -131,14 +143,16 @@ public class Beeman {
     }
 
 
-    public static List<List<Particle>> simulate(List<Particle> initial_particles) {
+    public static List<List<Particle>> simulate(List<Particle> initial_particles) throws IOException {
         List<List<Particle>> p = new ArrayList<>();
         p.add(initial_particles);
 
         int unexpected_escapes = 0;
 
+        List<Integer> rellocationQuantity = new ArrayList<>();
+
         for(int step=0; step < tf/dt-1; step++) {
-            if(step % 100 == 0)
+            if(step % 4000 == 0)
                 System.out.printf("Progress: %d%%%n", (int) (step/(tf/dt) * 100));
 
             p.add(new ArrayList<>());
@@ -172,7 +186,7 @@ public class Beeman {
                 Particle particle = p.get(step+1).get(i);
                 boolean expected_escape = particle.y <= particle.r || (particle.y < min_y && (particle.x > W || particle.x < 0));
 
-                boolean unexpected_escape = !expected_escape && (particle.y > L + min_y || particle.x > W || particle.x < 0);
+                boolean unexpected_escape = !expected_escape && (particle.y > L + min_y || particle.x > W || particle.x < 0 || particle.y < 0);
 
                 if (expected_escape || unexpected_escape) {
                     reallocated_particles.add(i);
@@ -182,9 +196,16 @@ public class Beeman {
 
             }
 
+            List<Particle> particlesCopy = new ArrayList<>(p.get(step + 1));
             for (Integer i : reallocated_particles) {
-                reallocate_particle(p.get(step+1).get(i), p.get(step+1), step+1);
+                particlesCopy.remove(p.get(step+1).get(i));
             }
+
+
+            for (Integer i : reallocated_particles) {
+                reallocate_particle(p.get(step+1).get(i), particlesCopy, step+1);
+            }
+            rellocationQuantity.add(reallocated_particles.size());
 
             neighbours = get_neighbours_at(p.get(step+1), step+1, true);
 
@@ -221,6 +242,14 @@ public class Beeman {
         }
 
         System.out.println("Unexpected reinsertions: "+unexpected_escapes);
+
+        FileWriter csv_fw = new FileWriter(String.format("reallocations_N%d_Ap%g_tf%g.csv", N, Ap, tf));
+        csv_fw.write("t,q");
+        for (int s = 0; s < p.size() - 1; s++) {
+            if (rellocationQuantity.get(s) > 0)
+                csv_fw.write(String.format("%g,%d\n", s*dt, rellocationQuantity.get(s)));
+        }
+        csv_fw.close();
 
         return p;
     }
@@ -268,8 +297,8 @@ public class Beeman {
     public static void save_simulation(List<List<Particle>> particles) throws IOException {
         System.out.println("Writing files");
 
-        FileWriter csv_fw = new FileWriter("out.csv");
-        FileWriter xyz_fw = new FileWriter("out.xyz");
+        FileWriter csv_fw = new FileWriter(String.format("out_N%d_Ap%g_tf%g.csv", N, Ap, tf));
+        FileWriter xyz_fw = new FileWriter(String.format("out_N%d_Ap%g_tf%g.xyz", N, Ap, tf));
         Locale.setDefault(Locale.US);
 
         csv_fw.write("t,id,x,y,vx,vy,r\n");
@@ -288,12 +317,14 @@ public class Beeman {
                 xyz_fw.write(String.format("%d %g %g %g %g %g 0 0 0\n", p.id, p.x, p.y, p.vx, p.vy, p.r));
             }
         }
+        xyz_fw.close();
 
 //        for (int s = 0; s < particles.size(); s++) {
 //            for(Particle p : particles.get(s)) {
 //                csv_fw.write(String.format("%g %d %g %g %g %g %g\n", s*dt, p.id, p.x, p.y, p.vx, p.vy, p.r));
 //            }
 //        }
+        csv_fw.close();
     }
 
     public static void main(String[] args) throws IOException {
