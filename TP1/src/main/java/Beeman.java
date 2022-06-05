@@ -1,5 +1,4 @@
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
 
 import static java.lang.Math.*;
@@ -8,9 +7,9 @@ public class Beeman {
 
     // Fixed parameters
 
-    static float L = 1;
+    static float L = 1f;
     static float W = 0.4f;
-    static float min_y = -L/10;
+    static float min_y = L/10;
     static float m = 0.01f;
     static float kn = 100000;
     static float g = 9.81f;
@@ -20,10 +19,10 @@ public class Beeman {
 
     // Variable parameters
 
-    static float Ap = 0.0f;
+    static float Ap = 0.15f;
     static float kt = 2*kn;
     static float dt = (float) (0.1 * sqrt(m/kn));
-    static float tf = 0.2f;
+    static float tf = 1.5f;
     static int N = 200;
 
     static int fps = 48*4;
@@ -31,14 +30,15 @@ public class Beeman {
 
     // Derived parameters
 
-    static float grid_size = max(L-min_y, W);
-    static int zy_count = (int) ceil((L-min_y)/(2*max_rad));
-    static int zx_count = (int) ceil( W/(2*max_rad));
+    static float grid_size = max(L+min_y, W);
+    static int zy_count = (int) ceil((L+min_y)/(2*max_rad));
+    static int zx_count = (int) ceil(W/(2*max_rad));
 
     static List<Map<Particle, Set<Particle>>> neighbours_step = new ArrayList<>();
 
-    public static Map<Particle, Set<Particle>> get_neighbours_at(List<Particle> particles, int step) {
-        if (step == -1)
+    public static Map<Particle, Set<Particle>> get_neighbours_at(List<Particle> particles, int step, boolean force) {
+
+        if (step == -1 || force)
             return CIM.findNeighbours(new HashSet<>(particles), 0.0f, grid_size, max(zy_count, zx_count), false);
 
         if (step == neighbours_step.size())
@@ -48,17 +48,21 @@ public class Beeman {
     }
 
 
-    public static void reallocate_particle(Particle p, List<Particle> particles) {
+    public static void reallocate_particle(Particle p, List<Particle> particles, int step) {
+
         float x, y;
-        while(true) {
-            x = (float) random() * (W - 2*p.r) + p.r;
-            y = (float) random() * (L/2 - p.r) + L/2;
 
-            float finalX = x, finalY = y;
-            boolean valid = particles.stream().allMatch((p2) -> hypot(finalX - p2.x, finalY - p2.y) > p.r + p2.r);
+        while (true) {
+            y = (float) (L + min_y - L/2 + Math.random()*(L/2-p.r));
+            x = (float) (p.r + Math.random()*(W-2*p.r));
 
-            if (valid)
+            p.x = x;
+            p.y = y;
+
+            Map<Particle, Set<Particle>> neighbours = get_neighbours_at(particles, step, true);
+            if (neighbours.get(p).size() == 0) {
                 break;
+            }
         }
         p.x = x;
         p.y = y;
@@ -69,7 +73,7 @@ public class Beeman {
 
     public static Pair<Float> collision_force(float zeta_ij, float v_rel_x, float v_rel_y, float en_x, float en_y) {
         float et_x = -en_y;
-        float et_y = et_x;
+        float et_y = en_x;
 
         float fn = -kn * zeta_ij;
         float ft = -kt * zeta_ij * (v_rel_x * et_x + v_rel_y * et_y);
@@ -90,7 +94,7 @@ public class Beeman {
         Particle p = particles.get(i);
 
         for(Particle n : neighbours.get(p)) {
-            float dist = (float) hypot(p.x - n.x, p.y - n.y);
+            float dist = (float) (Math.sqrt(Math.pow(p.x - n.x, 2) + Math.pow(p.y - n.y, 2)));
             float zeta_ij = p.r + n.r - dist;
 
             float v_rel_x = p.vx - n.vx;
@@ -109,14 +113,14 @@ public class Beeman {
 
         Pair<Float> force = null;
 
-        if(p.x <= p.r && p.y >= 0)
+        if(p.x <= p.r && p.y >= 0) // collision with left wall
             force = collision_force(p.r-p.x, p.vx, p.vy, -1, 0);
-        else if(W-p.x <= p.r && p.y >= 0)
+        else if(W-p.x <= p.r && p.y >= 0) // collision with right wall
             force = collision_force(p.r-(W-p.x), p.vx, p.vy, 1, 0);
-        else if(L - p.y <= p.r)
-            force = collision_force(p.r-(L-p.y), p.vx, p.vy, 0, 1);
-        else if(p.y <= p.r  && (p.x <= (W-Ap)/2 || p.x >= (W+Ap)/2))
-            force = collision_force(p.r-(p.y), p.vx, p.vy, 0, -1);
+        else if(L + min_y - p.y <= p.r) // collision with upper wall
+            force = collision_force(p.r-(L + min_y-p.y), p.vx, p.vy, 0, 1);
+        else if(p.y - min_y <= p.r  && (p.x <= (W-Ap)/2 || p.x >= (W+Ap)/2)) // collision with bottom wall
+            force = collision_force(p.r - (p.y - min_y), p.vx, p.vy, 0, -1);
 
         if(force != null) {
             force_x += force.x;
@@ -139,7 +143,8 @@ public class Beeman {
 
             p.add(new ArrayList<>());
 
-            Map<Particle, Set<Particle>> neighbours = get_neighbours_at(p.get(step), step);
+            Map<Particle, Set<Particle>> neighbours = get_neighbours_at(p.get(step), step, false);
+
             List<Integer> reallocated_particles = new ArrayList<>();
 
             for(int i=0; i<N; i++) {
@@ -161,34 +166,36 @@ public class Beeman {
                 p.get(step+1).get(i).x = p.get(step).get(i).x + p.get(step).get(i).vx*dt + (float) 2/3 * p.get(step).get(i).ax * dt*dt - (float) 1/6 * a_prev_x * dt*dt;
                 p.get(step+1).get(i).y = p.get(step).get(i).y + p.get(step).get(i).vy*dt + (float) 2/3 * p.get(step).get(i).ay * dt*dt - (float) 1/6 * a_prev_y * dt*dt;
 
-                // Get next speed (first approx)
-
-                p.get(step+1).get(i).vx = p.get(step).get(i).vx + (float) 3/2 * p.get(step).get(i).ax * dt - (float) 1/2 * a_prev_x * dt;
-                p.get(step+1).get(i).vy = p.get(step).get(i).vy + (float) 3/2 * p.get(step).get(i).ay * dt - (float) 1/2 * a_prev_y * dt;
 
                 // Reallocate escaped particles
 
-                boolean expected_escape = p.get(step+1).get(i).y <= min_y
-                        || (p.get(step+1).get(i).y > min_y && p.get(step+1).get(i).y < 0
-                        && (p.get(step+1).get(i).x > W || p.get(step+1).get(i).x < 0));
+                Particle particle = p.get(step+1).get(i);
+                boolean expected_escape = particle.y <= particle.r || (particle.y < min_y && (particle.x > W || particle.x < 0));
 
-                boolean unexpected_escape = !expected_escape &&
-                        (p.get(step+1).get(i).y > L || p.get(step+1).get(i).x > W || p.get(step+1).get(i).x < 0);
+                boolean unexpected_escape = !expected_escape && (particle.y > L + min_y || particle.x > W || particle.x < 0);
 
-                if(expected_escape || unexpected_escape) {
-                    reallocate_particle(p.get(step+1).get(i), p.get(step+1));
+                if (expected_escape || unexpected_escape) {
                     reallocated_particles.add(i);
                     unexpected_escapes += unexpected_escape ? 1 : 0;
                 }
+
+
             }
 
-            neighbours = get_neighbours_at(p.get(step+1), step+1);
+            for (Integer i : reallocated_particles) {
+                reallocate_particle(p.get(step+1).get(i), p.get(step+1), step+1);
+            }
+
+            neighbours = get_neighbours_at(p.get(step+1), step+1, true);
 
             for(int i=0; i<N; i++) {
                 // Previous acceleration
 
                 float a_prev_x = step>=1 ? p.get(step-1).get(i).ax : 0;
                 float a_prev_y = step>=1 ? p.get(step-1).get(i).ay : -g;
+
+                p.get(step+1).get(i).vx = p.get(step).get(i).vx + (float) 3/2 * p.get(step).get(i).ax * dt - (float) 1/2 * a_prev_x * dt;
+                p.get(step+1).get(i).vy = p.get(step).get(i).vy + (float) 3/2 * p.get(step).get(i).ay * dt - (float) 1/2 * a_prev_y * dt;
 
                 // Next acceleration (approx)
 
@@ -199,8 +206,8 @@ public class Beeman {
 
                 // Next speed (second approx)
 
-                p.get(step+1).get(i).vx = p.get(step).get(i).vx + (float) 1/3 * a_next_x * dt + (float) 5/6 * p.get(step).get(i).ax * dt - 1/6 * a_prev_x * dt;
-                p.get(step+1).get(i).vy = p.get(step).get(i).vy + (float) 1/3 * a_next_y * dt + (float) 5/6 * p.get(step).get(i).ay * dt - 1/6 * a_prev_y * dt;
+                p.get(step+1).get(i).vx = p.get(step).get(i).vx + (float) 1/3 * a_next_x * dt + (float) 5/6 * p.get(step).get(i).ax * dt - 1.f/6 * a_prev_x * dt;
+                p.get(step+1).get(i).vy = p.get(step).get(i).vy + (float) 1/3 * a_next_y * dt + (float) 5/6 * p.get(step).get(i).ay * dt - 1.f/6 * a_prev_y * dt;
 
                 // Reallocated particles have zero speed
 
@@ -212,6 +219,8 @@ public class Beeman {
                 }
             }
         }
+
+        System.out.println("Unexpected reinsertions: "+unexpected_escapes);
 
         return p;
     }
@@ -225,8 +234,11 @@ public class Beeman {
 
             for(int i=0; i<N; i++) {
                 float d = (float) Math.random() * (max_rad-min_rad) + min_rad;
-                float x = (float) Math.random() * (W-2*d) + d;
-                float y = (float) Math.random() * (L-2*d) + d;
+                float y = (float) (min_y + d + Math.random() * (L - 2*d));
+                float x = (float) (d + Math.random()*(W-2*d));
+
+
+
                 particles.add(new Particle(i, x, y, d));
             }
 
@@ -263,19 +275,25 @@ public class Beeman {
         csv_fw.write("t,id,x,y,vx,vy,r\n");
 
         for(int s=0; s<particles.size(); s+=anim_step) {
+//        for(int s=0; s<particles.size(); s++) {
             xyz_fw.write(String.format("%d\n\n", N+6));
-            xyz_fw.write(String.format("%d 0 %g 0 0 1e-15 255 255 255\n", N+1, min_y));
-            xyz_fw.write(String.format("%d 0 %g 0 0 1e-15 255 255 255\n", N+1, L));
-            xyz_fw.write(String.format("%d %g %g 0 0 1e-15 255 255 255\n", N+1, W, min_y));
-            xyz_fw.write(String.format("%d %g %g 0 0 1e-15 255 255 255\n", N+1, W, L));
-            xyz_fw.write(String.format("%d %g 0 0 0 0.01 255 0 0\n", N+1, (W-Ap)/2));
-            xyz_fw.write(String.format("%d %g 0 0 0 0.01 255 0 0\n", N+1, (W+Ap)/2));
+            xyz_fw.write(String.format("%d 0 %g 0 0 1e-15 255 255 255\n", N+1, 0.0));
+            xyz_fw.write(String.format("%d 0 %g 0 0 1e-15 255 255 255\n", N+1, L+min_y));
+            xyz_fw.write(String.format("%d %g %g 0 0 1e-15 255 255 255\n", N+1, W, 0.0));
+            xyz_fw.write(String.format("%d %g %g 0 0 1e-15 255 255 255\n", N+1, W, L+min_y));
+            xyz_fw.write(String.format("%d %g %g 0 0 0.01 255 0 0\n", N+1, (W-Ap)/2, min_y));
+            xyz_fw.write(String.format("%d %g %g 0 0 0.01 255 0 0\n", N+1, (W+Ap)/2, min_y));
 
             for(Particle p : particles.get(s)) {
                 xyz_fw.write(String.format("%d %g %g %g %g %g 0 0 0\n", p.id, p.x, p.y, p.vx, p.vy, p.r));
-                csv_fw.write(String.format("%g %d %g %g %g %g %g\n", s*dt, p.id, p.x, p.y, p.vx, p.vy, p.r));
             }
         }
+
+//        for (int s = 0; s < particles.size(); s++) {
+//            for(Particle p : particles.get(s)) {
+//                csv_fw.write(String.format("%g %d %g %g %g %g %g\n", s*dt, p.id, p.x, p.y, p.vx, p.vy, p.r));
+//            }
+//        }
     }
 
     public static void main(String[] args) throws IOException {

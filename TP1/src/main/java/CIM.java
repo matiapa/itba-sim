@@ -37,8 +37,8 @@ public class CIM {
 
         for (Particle p : particles) {
             // Get the zone coordinates of the particle
-            int x = (int) (Math.abs(p.getX()) / zoneSize);
-            int y = (int) (Math.abs(p.getY()) / zoneSize);
+            int x = (int) (p.getX() / zoneSize);
+            int y = (int) (p.getY() / zoneSize);
 
             zones.get(x).get(y).add(p);
         }
