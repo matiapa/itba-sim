@@ -20,10 +20,10 @@ public class Beeman {
     // Variable parameters
 
     static float Ap = 0;
-    static float kt = 2*kn;
+    static float kt = 1*kn;
     static float dt = (float) (0.1 * sqrt(m/kn));
-    static float tf = 4f;
-    static int N = 200;
+    static float tf = 2f;
+    static int N = 100;
 
     static int fps = 48*4;
     static int anim_step = (int) (((float) 1/fps) / dt);
@@ -301,7 +301,7 @@ public class Beeman {
         FileWriter xyz_fw = new FileWriter(String.format("out_N%d_Ap%g_tf%g.xyz", N, Ap, tf));
         Locale.setDefault(Locale.US);
 
-        csv_fw.write("t,id,x,y,vx,vy,r\n");
+        csv_fw.write("t id x y vx vy r\n");
 
         System.out.println("Writing animation...");
         for(int s=0; s<particles.size(); s+=anim_step) {

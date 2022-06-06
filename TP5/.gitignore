@@ -1,3 +1,4 @@
 */*.csv
 */*.xyz
 julia/
+out/
