@@ -61,20 +61,20 @@ public class Beeman {
             p.x = x;
             p.y = y;
 
-//            boolean valid = true;
-//            for (Particle p2 : particles) {
-//                if (p.distanceTo(p2, L, false) <= 0 && !p.equals(p2)) {
-//                    valid = false;
-//                    break;
-//                }
-//            }
-//
-//            if (valid)
-//                break;
+            boolean valid = true;
+            for (Particle p2 : particles) {
+                if (p.distanceTo(p2, L, false) <= 0 && !p.equals(p2)) {
+                    valid = false;
+                    break;
+                }
+            }
 
-            Map<Particle, Set<Particle>> neighbours = get_neighbours_at(particles, step, true);
-            if (neighbours.get(p).size() == 0)
+            if (valid)
                 break;
+
+//            Map<Particle, Set<Particle>> neighbours = get_neighbours_at(particles, step, true);
+//            if (neighbours.get(p).size() == 0)
+//                break;
         }
         p.x = x;
         p.y = y;
@@ -303,6 +303,7 @@ public class Beeman {
 
         csv_fw.write("t,id,x,y,vx,vy,r\n");
 
+        System.out.println("Writing animation...");
         for(int s=0; s<particles.size(); s+=anim_step) {
 //        for(int s=0; s<particles.size(); s++) {
             xyz_fw.write(String.format("%d\n\n", N+6));
@@ -319,7 +320,8 @@ public class Beeman {
         }
         xyz_fw.close();
 
-        for (int s = 0; s < particles.size(); s++) {
+        System.out.println("Writing CSV");
+        for (int s = 0; s < particles.size(); s+=anim_step/2) {
             for(Particle p : particles.get(s)) {
                 csv_fw.write(String.format("%g %d %g %g %g %g %g\n", s*dt, p.id, p.x, p.y, p.vx, p.vy, p.r));
             }
