@@ -1,14 +1,12 @@
 {
   "grid": {
-    "size": 15,
+    "size": 20,
     "type": "3D",
-    "method": "alive_coordinates",
-    "particles": [[1,1,1],[1,2,1],[1,2,3],[1,3,1],[1,3,2],
-      [2,1,1],[2,2,1],[2,2,3],[2,3,1],[2,3,2]],
+    "method": "random",
     "random": {
-      "aliveProportion": 0.25
+      "aliveProportion": 0.15
     }
   },
-  "evolutionRule": "6657",
+  "evolutionRule": "1112",
   "maxIterations": 20
 }

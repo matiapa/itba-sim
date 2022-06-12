@@ -187,7 +187,9 @@ public class Main {
 
     static Cell[][] randomGrid2D(int L, double p) {
         long N = Math.round(p * L/2 * L/2);
-        double u = (double) L/2;
+
+        double u = (double) L / 2;
+
         double sd = (double) (L / 4) / 3;
 
         Random r = new Random();

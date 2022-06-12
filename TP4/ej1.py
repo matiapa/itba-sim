@@ -139,9 +139,11 @@ def gear():
         r2_p = r2(step) + r3(step) * dt + r4(step) * dt**2/2 + r5(step) * dt**3/6
 
         # Evaluamos la aceleracion y la comparamos con la predecida
-        r[step+1] = r_p
-        r1[step+1] = r1_p
-        DR2 = (r2(step+1) - r2_p) * dt**2 / 2
+        # r[step+1] = r_p
+        # r1[step+1] = r1_p
+        # DR2 = (r2(step+1) - r2_p) * dt**2 / 2
+        a = f(r_p, r1_p)/m
+        DR2 = (a - r2_p) * dt**2 / 2
 
         # Corregimos la posicion y velocidad y las guardamos
         r[step+1] = r_p + alpha[0] * DR2

@@ -1,3 +1,4 @@
+from audioop import avg
 from matplotlib import pyplot as plt
 import numpy as np
 import pandas
@@ -6,7 +7,7 @@ import math
 
 def parse_file(filename):
     print('Reading file...')
-    df = pandas.read_csv(filename)
+    df = pandas.read_csv(filename, sep=' ')
     R, V = [], []
 
     print('Parsing file...')
@@ -14,13 +15,14 @@ def parse_file(filename):
         R.append( t_df[['x','y']].to_numpy() )
         V.append( t_df[['vx','vy']].to_numpy() )
 
-    return R, V
+    return df['t'].unique(), R, V
 
 def beverloo(N, c, i, x):
     np = N/0.3
     return np * math.sqrt(9.8) * (x[i] - (c * 0.0125))**1.5
 
-def ej1():
+def kinetic_energy_plot_file(filename, label):
+    T, R, V = parse_file(filename)
 
     df1 = pandas.read_csv('ej1_0_15.csv')
     df2 = pandas.read_csv('ej1_0_18.csv')
@@ -68,146 +70,44 @@ def ej1():
 
     #---------------- CALCULO DE PROMEDIO -----------------
     
-    dt = 2
+    plt.plot(T, uk, label=label)
 
-    avg = list()
-    std = list()
+
+def kinetic_energy_plot_kt():
+    kinetic_energy_plot_file('out/kt1.csv', label='Kt=1*Kn')
+    kinetic_energy_plot_file('out/kt2.csv', label='Kt=2*Kn')
+    kinetic_energy_plot_file('out/kt3.csv', label='Kt=3*Kn')
+
+    plt.xlabel('Time (s)')
+    plt.ylabel('Kinetic Energy (J)')
+    plt.yscale('Log')
+    plt.legend()
+    plt.show()
+
+
+def kinetic_energy_plot_ap():
+    kinetic_energy_plot_file('out/ap015.csv', label='Ap=0.15m')
+
+    plt.xlabel('Time (s)')
+    plt.ylabel('Kinetic Energy (J)')
+    plt.yscale('Log')
+    plt.legend()
+    plt.show()
+
+
+def avg_energy(filename, start, stop):
+    R, V = parse_file(filename)
+
+    uk= []
+    for s in range(int(start/dt), int(stop/dt)):
+        _, Vt = R[s], V[s]     
+        uk.append( sum(0.5 * m * (Vt[:,0]**2+Vt[:,1]**2)) )
     
-    for j in range(len(datas)):
-        i = 0
-        while dt_x[j][i] < dt:
-            i += 1
-        avg.append(np.mean(dt_q[j][i:]))
-        std.append(np.std(dt_q[j][i:]))
+    return np.average(uk), np.std(uk)
 
 
-    plt.errorbar(data_labels, avg, yerr=std, marker='o')
-    plt.ylabel("Promedio del caudal (1/s)")
-    plt.xlabel("Apertura (m)")
-    plt.show()
-
-    #---------------- FIN CALCULO DE PROMEDIO -----------------
-
-    #---------------- CALCULO DE BEVERLOO -----------------
-
-    ecm = []
-    c = []
-    min_sum = None
-    min_c = 0
-    step = 1/100000
-    i = 0
-    max_i = 5
-
-    while i < max_i:
-        c.append(i)
-        sum = 0
-        for j in range(len(data_labels)):
-            sum += (avg[j] - beverloo(300, i, j, data_labels))**2
-        sum /= len(data_labels)
-        ecm.append(sum)
-        if min_sum == None or sum < min_sum:
-            min_sum = sum
-            min_c = i
-        i+=step
-
-    plt.plot(c, ecm)
-    plt.scatter([min_c], [min_sum])
-    plt.xlabel("Valor constante C")
-    plt.ylabel("ECM")
-    plt.show()
+def avg_energy_plot():
+    avg_energy('out_N200_Ap0.0_tf0.5_kt1.csv', )
 
 
-    plt.errorbar(data_labels, avg, label="Datos Obtenidos", yerr=std, marker='o')
-
-    beverloo_values = [beverloo(300, min_c, i, data_labels) for i in range(len(data_labels))]
-
-    plt.plot(data_labels, beverloo_values, label="Beverloo")
-    plt.ylabel("Caudal (1/s)")
-    plt.xlabel("Apertura (m)")
-    plt.legend()
-    plt.show()
-
-    #---------------- FIN CALCULO DE BEVERLOO -----------------
-
-def ej3():
-    df1 = pandas.read_csv('ej3_0.15.csv')
-    df2 = pandas.read_csv('ej3_0.18.csv')
-    df3 = pandas.read_csv('ej3_0.21.csv')
-    df4 = pandas.read_csv('ej3_0.24.csv')
-
-    datas = [df1, df2, df3, df4]
-    data_labels = [0.15, 0.18, 0.21, 0.24]
-
-    #---------------- CALCULO DE Ek -----------------
-
-    for i in range(len(datas)):
-        plt.plot(df1['Dt'], datas[i]['KE'], label = "Ap = "+str(data_labels[i])+" m")
-    plt.xlabel("t (s)")
-    plt.ylabel("Ek (J)")
-    plt.semilogy()
-    plt.legend()
-    plt.show()
-
-def ej4():
-    df1 = pandas.read_csv('ej4_1.csv')
-    df2 = pandas.read_csv('ej4_2.csv')
-    df3 = pandas.read_csv('ej4_3.csv')
-
-    datas = [df1, df2, df3]
-
-    #---------------- CALCULO DE Ek en base a Kn -----------------
-
-    for i in range(len(datas)):
-        plt.plot(datas[i]['Dt'], datas[i]['KE'], label = "Kt = "+str(i+1)+"Kn N/m")
-
-    plt.xlabel("t (s)")
-    plt.ylabel("Ek (J)")
-    plt.semilogy()
-    plt.legend()
-    plt.show()
-
-    #---------------- FIN CALCULO DE Ek en base a Kn -----------------
-
-    #---------------- CALCULO DE Ek en base a Kt -----------------
-
-    t_avg = [2.2, 7, 3.3]
-    avg = []
-    std = []
-    labels = ["Kn", "2Kn", "3Kn"]
-
-    # get average of each Kt where 'Dt' is greater than t_avg
-    for i in range(len(datas)):
-
-        values = []
-        t = 0
-        while t < len(datas[i]['Dt']):
-            if datas[i]['Dt'][t] > t_avg[i]:
-                values = datas[i]['KE'][t:]
-                break
-            t+=1
-
-        print(t)
-
-        avg.append(np.mean(values))
-        std.append(np.std(values))
-
-        print(avg)
-
-    # show errorbar without line
-    plt.errorbar(labels, avg, yerr=std, marker='o', ls='none')
-
-
-    # plt.errorbar(labels, avg, yerr=std)
-    plt.xlabel("Kt")
-    plt.ylabel("Ek (J)")
-    plt.show()
-
-
-
-
-
-# kinetic_energy_plot('out.csv')
-# ej1()
-# ej3()
-ej4()
-# ej1_file_generation()
+kinetic_energy_plot_ap()
