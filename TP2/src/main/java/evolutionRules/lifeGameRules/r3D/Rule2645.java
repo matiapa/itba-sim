@@ -19,4 +19,9 @@ public class Rule2645 extends LifeGameRule {
     public String toString() {
         return "Rule2645";
     }
+
+    @Override
+    public String ruleType() {
+        return "3D";
+    }
 }
