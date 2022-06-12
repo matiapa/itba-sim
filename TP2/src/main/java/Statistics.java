@@ -10,26 +10,88 @@ import evolutionRules.lifeGameRules.r3D.Rule6657;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
 public class Statistics {
 
     public static void main(String[] args) throws FileNotFoundException, UnsupportedEncodingException {
 //        stats2D();
-        stats3D();
+//        stats3D();
+        stats();
+    }
+
+    public static void stats() throws FileNotFoundException, UnsupportedEncodingException {
+        int L2D = 100;
+        int L3D = 20;
+        int maxIterations = 100;
+        int samples = 1;
+
+        EvolutionRule[] rules = new EvolutionRule[]{new Rule3323(), new Rule5556(), new Rule6657()};
+        double[] proportions = new double[]{0.15, 0.3, 0.45, 0.6, 0.75, 0.9};
+
+        PrintWriter writer = new PrintWriter("stats.csv", "UTF-8");
+        writer.println("rule,p,s,t,x,y,z");
+        Locale.setDefault(Locale.US);
+
+        for (int s = 0; s < samples; s++) {
+            for (double proportion : proportions) {
+                Cell[][] grid2D = Main.randomGrid2D(L2D, proportion);
+                Cell[][][] grid3D = Main.randomGrid3D(L3D, proportion);
+
+                for (EvolutionRule rule : rules) {
+                    if (Objects.equals(rule.ruleType(), "2D")) {
+                        List<Cell[][]> grid = Automata.run(grid2D, rule, maxIterations);
+                        write2D(writer, grid, rule, proportion, s);
+                    } else {
+                        List<Cell[][][]> grid = Automata.run(grid3D, rule, maxIterations);
+                        System.out.println(grid.size());
+                        write3D(writer, grid, rule, proportion, s);
+                    }
+                }
+            }
+
+//            if (s % 10 == 0)
+//                System.out.println("Sample "+s);
+        }
+
+        writer.close();
+    }
+
+    private static void write2D(PrintWriter writer, List<Cell[][]> grid, EvolutionRule rule, double p, int s) {
+        for (int t = 0; t < grid.size(); t++) {
+            for (int i = 0; i < grid.get(t).length; i++) {
+                for (int j = 0; j < grid.get(t)[i].length; j++) {
+                    if (grid.get(t)[i][j].isAlive())
+                        writer.printf("%s,%.2f,%d,%d,%d,%d,1\n", rule, p, s, t, i, j);
+                }
+            }
+        }
+    }
+
+    private static void write3D(PrintWriter writer, List<Cell[][][]> grid, EvolutionRule rule, double p, int s) {
+        for (int t = 0; t < grid.size(); t++) {
+            for (int i = 0; i < grid.get(t).length; i++) {
+                for (int j = 0; j < grid.get(t)[i].length; j++) {
+                    for (int z = 0; z < grid.get(t)[i][j].length; z++) {
+                        if (grid.get(t)[i][j][z].isAlive())
+                            writer.printf("%s,%.2f,%d,%d,%d,%d,%d\n", rule, p, s, t, i, j, z);
+                    }
+                }
+            }
+        }
     }
 
     public static void stats3D() throws FileNotFoundException, UnsupportedEncodingException {
-        int L = 20;
+        int L = 100;
         int maxIterations = 100;
         int samples = 100;
 
         // Perform {samples} amount of simulations with each studied rule
 
         EvolutionRule[] rules = new EvolutionRule[]{new Rule2645(), new Rule5556(), new Rule6657()};
-        double[] proportions = new double[]{0.05, 0.10, 0.15, 0.20, 0.25, 0.30};
+        double[] proportions = new double[]{0.15, 0.3, 0.45, 0.6, 0.75, 0.9};
 
         int[][][][] aliveCells = new int[proportions.length][rules.length][maxIterations][samples];
         double[][][][] maxRadius = new double[proportions.length][rules.length][maxIterations][samples];
@@ -120,7 +182,7 @@ public class Statistics {
         // Perform {samples} amount of simulations with each (rule, proportion)
 
         EvolutionRule[] rules = new EvolutionRule[]{new Rule1112(), new Rule3323(), new Rule3623()};
-        double[] proportions = new double[]{0.05, 0.10, 0.15, 0.20, 0.25, 0.30};
+        double[] proportions = new double[]{0.15, 0.3, 0.45, 0.6, 0.75, 0.9};
 
         int[][][][] aliveCells = new int[proportions.length][rules.length][maxIterations][samples];
         double[][][][] maxRadius = new double[proportions.length][rules.length][maxIterations][samples];

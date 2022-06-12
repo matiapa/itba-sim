@@ -65,13 +65,13 @@ public class Main {
         String method = grid.getString("method");
         String type = grid.getString("type");
         int L = grid.getInt("size");
+        float p = grid.getJSONObject("random").getFloat("aliveProportion");
 
         Cell[][] grid2D = null;
         Cell[][][] grid3D = null;
 
         switch (method) {
             case "random":
-                float p = grid.getJSONObject("random").getFloat("aliveProportion");
 
                 if (type.equals("2D"))
                     grid2D = randomGrid2D(L, p);
@@ -100,7 +100,8 @@ public class Main {
 
         PrintWriter writer;
         try {
-            writer = new PrintWriter("output.csv", "UTF-8");
+            writer = new PrintWriter(String.format("output_%s_%g.csv", ruleStr, p), "UTF-8");
+//            writer = new PrintWriter("output.csv", "UTF-8");
         } catch (IOException e) {
             System.out.println("Couldn't create output file 'output.csv'");
             return;
@@ -128,7 +129,7 @@ public class Main {
                     for (int j = 0; j < results.get(t)[i].length; j++) {
                         for (int k = 0; k < results.get(t)[i][j].length; k++) {
                             if (results.get(t)[i][j][k].isAlive()) {
-                                writer.println(String.format("%d,%d,%d,%s",t,i,j,results.get(t)[i][j][k].toString()));
+                                writer.println(String.format("%d,%d,%d,%d,%s",t,i,j,k,results.get(t)[i][j][k].toString()));
                             }
                         }
                     }
@@ -185,8 +186,8 @@ public class Main {
     }
 
     static Cell[][] randomGrid2D(int L, double p) {
-        long N = Math.round(p * L * L);
-        double u = (double) L / 2;
+        long N = Math.round(p * L/2 * L/2);
+        double u = (double) L/2;
         double sd = (double) (L / 4) / 3;
 
         Random r = new Random();
@@ -215,9 +216,11 @@ public class Main {
     }
 
     static Cell[][][] randomGrid3D(int L, double p) {
-        long N = Math.round(p * L * L);
+        long N = Math.round(p * L/2 * L/2 * L/2);
         double u = (double) L / 2;
         double sd = (double) (L / 4) / 3;
+
+
 
         Random r = new Random();
         Set<Point3D> aliveCellsCoordinates = new HashSet<>();
@@ -236,7 +239,6 @@ public class Main {
             for(int col=0; col<L; col++){
                 for(int depth=0; depth<L; depth++){
                     if(aliveCellsCoordinates.contains(new Point3D(row, col, depth))){
-//                        System.out.println("hello");
                         randomGrid3D[row][col][depth] = new Cell(true);
                     } else {
                         randomGrid3D[row][col][depth] = new Cell(false);

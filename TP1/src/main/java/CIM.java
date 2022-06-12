@@ -10,13 +10,13 @@ public class CIM {
 
     static private void addZoneNeighbours(
         Set<Particle> particleZones, Map<Particle, Set<Particle>> particleNeighbours,
-        Particle p, float rc, int L, int M, boolean periodic
+        Particle p, float rc, float L, int M, boolean periodic
     ) {
         if (particleZones != null)
             particleNeighbours.get(p).addAll(particleZones.stream().parallel().filter(c -> !p.equals(c) && p.distanceTo(c, L, periodic) <= rc).collect(Collectors.toList()));
     }
 
-    static public Map<Particle, Set<Particle>> findNeighbours(Set<Particle> particles, float rc, int L, int M, boolean periodic) {
+    static public Map<Particle, Set<Particle>> findNeighbours(Set<Particle> particles, float rc, float L, int M, boolean periodic) {
 
         Map<Particle, Set<Particle>> particleNeighbours = new HashMap<>();
         ArrayList<ArrayList<Set<Particle>>> zones = new ArrayList<>();
@@ -40,6 +40,9 @@ public class CIM {
             int x = (int) (p.getX() / zoneSize);
             int y = (int) (p.getY() / zoneSize);
 
+            if (x < 0 || y < 0)
+                System.out.println("Invlalid");
+
             zones.get(x).get(y).add(p);
         }
 
@@ -50,8 +53,8 @@ public class CIM {
             particleNeighbours.put(p, new HashSet<>());
 
             // Get the zone coordinates of the particle
-            int x = (int) (p.getX() / zoneSize);
-            int y = (int) (p.getY() / zoneSize);
+            int x = (int) (Math.abs(p.getX()) / zoneSize);
+            int y = (int) (Math.abs(p.getY()) / zoneSize);
 
             // Check if particles on the near zones are neighbours
             List<Set<Particle>> nearZonesNonPeriodic = Arrays.asList(
