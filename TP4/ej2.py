@@ -3,6 +3,7 @@ from matplotlib import animation, pyplot
 import numpy as np
 import math
 import random
+from scipy.stats import norm
 
 # ---------------------------------------------------------------
 #                   CONDICIONES DEL PROBLEMA
@@ -16,7 +17,7 @@ Q = 1e-19
 K = 1e10
 L = (sqrt(N)-1)*D
 
-absortion_distance = 0.01*D
+absortion_distance = 0.05*D
 particles_x = np.linspace(D, L+D, int(sqrt(N)), endpoint=True)
 particles_y = np.linspace(0, L, int(sqrt(N)), endpoint=True)
 
@@ -206,14 +207,22 @@ def gear(r0, v0):
             stop_reason = 'particle_absorbed'
             break
 
-        # Evaluamos la aceleración y la comparamos con la predecida
-        r.append( r_p )
-        r1.append( r1_p )
-        DR2 = (r2(step+1) - r2_p) * dt**2 / 2
+        # # Evaluamos la aceleración y la comparamos con la predecida
+        a = f(r_p, r1_p)/M
+        DR2 = (a - r2_p) * dt**2 / 2
 
         # Corregimos la posición y velocidad y las guardamos
-        r[step+1] = r_p + alpha[0] * DR2
-        r1[step+1] = r1_p + alpha[1] * DR2 * 1/dt
+        r.append( r_p + alpha[0] * DR2 )
+        r1.append( r1_p + alpha[1] * DR2 * 1/dt )
+
+        # Evaluamos la aceleración y la comparamos con la predecida
+        # r.append( r_p )
+        # r1.append( r1_p )
+        # DR2 = (r2(step) - r2_p) * dt**2 / 2
+
+        # # Corregimos la posición y velocidad y las guardamos
+        # r[-1] = r_p + alpha[0] * DR2
+        # r1[-1] = r1_p + alpha[1] * DR2 * 1/dt
 
         # Avanzamos el tiempo de la simulación
         step += 1
@@ -392,9 +401,10 @@ def energy_variation_vs_t_plot(v0, fun):
 
 
 def trajectory_vs_v0_plot(fun):
-    y_values = [random.uniform(0, L) for _ in range(25)]
-    # v_values = [5e3+11250*i for i in range(5)]
-    v_values = [5e3, 10e3, 15e3, 20e3, 25e3, 30e3, 35e3, 40e3, 45e3, 50e3]
+    # v_values = [5e3, 10e3, 15e3, 20e3, 25e3, 30e3, 35e3, 40e3, 45e3, 50e3]
+    v_values = [5e3, 15e3, 25e3, 35e3, 45e3]
+    y_values = np.linspace(L/2-D, L/2+D, 20, endpoint=True)
+    
     avg_long = list()
     std = list()
 
@@ -430,8 +440,9 @@ def trajectory_vs_v0_plot(fun):
 def absortion_escape_plot(fun):
     global stop_reason
 
-    V0 = [5e3, 10e3, 15e3, 20e3, 25e3, 30e3, 35e3, 40e3, 45e3, 50e3]
-    Y0 = np.linspace(L/2-D, L/2+D, 25, endpoint=True)
+    # V0 = [5e3, 10e3, 15e3, 20e3, 25e3, 30e3, 35e3, 40e3, 45e3, 50e3]
+    V0 = [5e3, 15e3, 25e3, 35e3, 45e3]
+    Y0 = np.linspace(L/2-D, L/2+D, 20, endpoint=True)
 
     samples = len(Y0)
     p_abs, p_exited, p_left, p_right, p_top, p_bottom = [], [], [], [], [], []
@@ -465,12 +476,12 @@ def absortion_escape_plot(fun):
         p_bottom.append(bottom / samples * 100)
         print(absorbed)
 
-    pyplot.scatter(V0, p_abs, label='Absorbidas')
-    pyplot.scatter(V0, p_exited, label='Escapadas')
-    # pyplot.scatter(V0, p_left, label='Escapadas (izquierda)')
-    # pyplot.scatter(V0, p_right, label='Escapadas (derecha)')
-    # pyplot.scatter(V0, p_top, label='Escapadas (arriba)')
-    # pyplot.scatter(V0, p_bottom, label='Escapadas (abajo)')
+    # pyplot.scatter(V0, p_abs, label='Absorbidas')
+    # pyplot.scatter(V0, p_exited, label='Escapadas')
+    pyplot.scatter(V0, p_left, label='Escapadas (izquierda)')
+    pyplot.scatter(V0, p_right, label='Escapadas (derecha)')
+    pyplot.scatter(V0, p_top, label='Escapadas (arriba)')
+    pyplot.scatter(V0, p_bottom, label='Escapadas (abajo)')
 
     pyplot.legend()
     pyplot.ticklabel_format(style='sci', axis='x', scilimits=(0,0))
@@ -479,11 +490,38 @@ def absortion_escape_plot(fun):
     pyplot.show()
 
 
-def trajectory_pdf_plot(fun):
+def general_trajectory_pdf_plot(fun):
+    global stop_reason
+
+    V0 = [10e3, 20e3, 30e3, 40e3, 50e3]
+    Y0 = np.linspace(L/2-D, L/2+D, 20, endpoint=True)
+
+    # Trajectory
+    for v0 in V0:
+        trajectory_lengths = []
+
+        for y0 in Y0:
+            print(f'V0: {v0} - Y0: {y0}')
+            
+            r,v = fun(r0=[0, y0], v0=[v0, 0])
+
+            length = 0
+            for i in range(1, len(r)):
+                length += math.dist([r[i-1][0], r[i-1][1]], [r[i][0], r[i][1]])
+            trajectory_lengths.append(length)
+        
+        pyplot.plot(trajectory_lengths, norm.pdf(trajectory_lengths), label=f'V0={"{:.1e} m/s".format(v0)}')
+    
+    pyplot.legend()    
+    pyplot.xlabel('Longitud de la trayectoria (m)')
+    pyplot.ylabel('Densidad de probabilidad')
+    pyplot.show()
+
+
+def absorbed_trajectory_pdf_plot(fun):
     global stop_reason
 
     V0 = [40e3, 45e3, 50e3]
-    # V0 = [5e3, 10e3, 15e3]
     Y0 = np.linspace(L/2-D, L/2+D, 25, endpoint=True)
 
     # Trajectory
@@ -501,16 +539,14 @@ def trajectory_pdf_plot(fun):
                     length += math.dist([r[i-1][0], r[i-1][1]], [r[i][0], r[i][1]])
                 trajectory_lengths.append(length)
         
-        print(trajectory_lengths)
         pyplot.hist(trajectory_lengths, density = True, histtype="step", label=f'V0={"{:.1e} m/s".format(v0)}')
+        # pyplot.plot(trajectory_lengths, norm.pdf(trajectory_lengths), label=f'V0={"{:.1e} m/s".format(v0)}')
     
     pyplot.legend()
     pyplot.ticklabel_format(style='sci', axis='x', scilimits=(0,0))
     
     pyplot.xlabel('Longitud de la trayectoria (m)')
     pyplot.ylabel('Densidad de probabilidad')
-
-    pyplot.yscale('log')
 
     pyplot.show()
 
@@ -527,14 +563,16 @@ tf = np.Infinity
 # tf = 2e-12
 
 if __name__ == '__main__':
-    # animate(r0=[0, L/3], v0=[5e3, 0], fun=gear)
+    # animate(r0=[0, L/3+D/3], v0=[15e3, 0], fun=verlett)
 
-    # energy_average_vs_dt_plot(v0=[5e4, 0], fun=gear)
+    # energy_average_vs_dt_plot(v0=[5e4, 0], fun=verlett)
 
-    # energy_variation_vs_t_plot(v0=[5e4, 0], fun=gear)
+    # energy_variation_vs_t_plot(v0=[5e4, 0], fun=verlett)
 
-    # trajectory_vs_v0_plot(fun=gear)
+    # trajectory_vs_v0_plot(fun=verlett)
 
-    # absortion_escape_plot(fun=gear)
+    # absortion_escape_plot(fun=verlett)
 
-    trajectory_pdf_plot(fun=gear)
+    absorbed_trajectory_pdf_plot(fun=verlett)
+
+    # general_trajectory_pdf_plot(fun=verlett)

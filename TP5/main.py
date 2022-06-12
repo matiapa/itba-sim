@@ -247,8 +247,8 @@ def random_init(N):
 
         R0_n, D_n, avoid = [], [], set()
 
-        zy_size, zy_count = 0.06, ceil((L + min_y)/0.06)
-        zx_size, zx_count = 0.06, ceil(W/0.06)
+        zy_size, zy_count = 2*max_rad, ceil((L-min_y)/(2*max_rad))
+        zx_size, zx_count = 2*max_rad, ceil(W/(2*max_rad))
         neighbours = get_neighbours(R0, D, zy_size, zx_size, zy_count, zx_count, 0)
 
         for i in range(len(neighbours)):
@@ -284,11 +284,11 @@ max_rad = 0.015
 
 # Parametros variables
 
-Ap = 0.15  # Ap ε [0.15, 0.25] (m)
+Ap = 0.00  # Ap ε [0.15, 0.25] (m)
 kt = 2*kn
-tf = 2
+tf = 0.5
 dt = 0.1 * sqrt(m/kn)
-N = 150
+N = 200
 
 fps = 48*4
 anim_step = int((1/fps) / dt)
@@ -306,9 +306,9 @@ def write_ovito_line(R, V, D):
     for i in range(N):
         anim_file.write(f'{i} {R[1][i][0]} {R[1][i][1]} {V[1][i][0]} {V[1][i][1]} {D[i]} 0 0 0\n')
 
-def write_csv_line(R, V, D, s):
-    for i in range(N):
-        out_file.write(f'{s},{i},{R[1][i][0]},{R[1][i][1]},{V[1][i][0]},{V[1][i][1]}\n')
+    R0, D = random_init(N)
+    V0 = np.zeros_like(R0)
+    R,V = beeman(R0, V0, D)
 
 def write_insertions_file(I):
     insert_file.write('t,cant\n')
@@ -316,14 +316,16 @@ def write_insertions_file(I):
         if I[i] != 0:
             insert_file.write(f'{i*dt},{I[i]}\n')
 
+    print('Saving files...')
+    
+    out_file = open('out_N{}_Ap{}_tf{}_kt{}.csv'.format(N, Ap, tf, int(kt/kn)), 'w')
+    anim_file = open('out_N{}_Ap{}_tf{}_kt{}.xyz'.format(N, Ap, tf, int(kt/kn)), 'w')
 
-def file_generation(R, V, D, I=None, animate=True):
-
-    out_file.write('t,id,x,y,vx,vy\n')    
+    out_file.write('t id x y vx vy\n')
     for s in range(len(R)):
 
         for i in range(N):
-            out_file.write(f'{s},{i},{R[s][i][0]},{R[s][i][1]},{V[s][i][0]},{V[s][i][1]}\n')
+            out_file.write(f'{dt*s} {i} {R[s][i][0]} {R[s][i][1]} {V[s][i][0]} {V[s][i][1]}\n')
 
         if s % anim_step == 0 and animate:
             anim_file.write(f'{N+6}\n\n')

@@ -91,7 +91,8 @@ public class Statistics {
         // Perform {samples} amount of simulations with each studied rule
 
         EvolutionRule[] rules = new EvolutionRule[]{new Rule2645(), new Rule5556(), new Rule6657()};
-        double[] proportions = new double[]{0.15, 0.3, 0.45, 0.6, 0.75, 0.9};
+
+        double[] proportions = new double[]{0.15, 0.30, 0.45, 0.60, 0.75, 0.90};
 
         int[][][][] aliveCells = new int[proportions.length][rules.length][maxIterations][samples];
         double[][][][] maxRadius = new double[proportions.length][rules.length][maxIterations][samples];
@@ -182,7 +183,8 @@ public class Statistics {
         // Perform {samples} amount of simulations with each (rule, proportion)
 
         EvolutionRule[] rules = new EvolutionRule[]{new Rule1112(), new Rule3323(), new Rule3623()};
-        double[] proportions = new double[]{0.15, 0.3, 0.45, 0.6, 0.75, 0.9};
+
+        double[] proportions = new double[]{0.15, 0.30, 0.45, 0.60, 0.75, 0.90};
 
         int[][][][] aliveCells = new int[proportions.length][rules.length][maxIterations][samples];
         double[][][][] maxRadius = new double[proportions.length][rules.length][maxIterations][samples];
