@@ -1,0 +1,12 @@
+{
+  "grid": {
+    "size": 20,
+    "type": "3D",
+    "method": "random",
+    "random": {
+      "aliveProportion": 0.15
+    }
+  },
+  "evolutionRule": "1112",
+  "maxIterations": 20
+}

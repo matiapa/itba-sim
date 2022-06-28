@@ -1,0 +1,14 @@
+{
+  "grid": {
+    "method": "coordinates"                      # The method used to pass the initial grid, can be 'array', 'alive_coordinates' or 'random'
+    "size": 10,                                  # The size of the grid must be specified
+    "type": "2D",                                # The type of grid to use, can be '2D' or '3D'
+    "particles": [[1,1],[1,2],[2,1],[2,2]],      # When using 'array' or 'alive_coordinates' grid will be initialized as this
+    "random": {                                  # When using 'random', these parameters will be used
+      "aliveProportion": 0.05                    # The proportion of cells that will be alive, can be between 0 and 1
+    }
+  },
+  "evolutionRule": "B3/S23",                     # The evolution rule to use, can be 'B1/S12', 'B3/S23/D5', 'B3/S23', 'B36/S23'
+                                                 # for the meaning of notation checkout corresponding classes
+  "maxIterations": 5                             # The max number of iterations to simulate
+}
