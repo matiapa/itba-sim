@@ -9,7 +9,7 @@ from tqdm import tqdm
 
 state_colors = {
     "SUSCEPTIBLE": [0,0,1], "EXPOSED": [1,1,0], "INFECTED": [1,0,0], "QUARANTINED": [0.5,0.5,0.5],
-    "RECOVERED": [0,1,0], "DEATH": [0,0,0]
+    "RECOVERED": [0,1,0], "DEAD": [0,0,0]
 }
 
 def create_grid(size, iteration):
@@ -28,7 +28,7 @@ def animate_step(frame):
         new_grid = create_grid(grid_size, frame) 
         img_plot.set_data(new_grid)
 
-    plt.savefig(f"out/{frame}.png")
+    # plt.savefig(f"out/{frame}.png")
 
     try:
         load_iter.__next__()
@@ -63,7 +63,7 @@ def plot(size, animate=False):
 df = pd.read_csv('output.csv')
 df.set_index(['t'])
 
-grid_size = 10
+grid_size = 100
 end_t = max(df['t'])
 
 load_iter = tqdm(range(end_t)).__iter__()

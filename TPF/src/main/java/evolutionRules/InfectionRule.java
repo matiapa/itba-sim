@@ -63,7 +63,7 @@ public class InfectionRule implements EvolutionRule {
             stateWeights.add(new Pair<>(CellState.QUARANTINED, (double) pqr));
             stateWeights.add(new Pair<>(CellState.RECOVERED, (double) prr));
             stateWeights.add(new Pair<>(CellState.DEAD, (double) pdr));
-            stateWeights.add(new Pair<>(CellState.INFECTED, (double) pir));
+            stateWeights.add(new Pair<>(null, (double) pir));
 
             newState = new EnumeratedDistribution<>(stateWeights).sample();
 
@@ -75,7 +75,7 @@ public class InfectionRule implements EvolutionRule {
 
             stateWeights.add(new Pair<>(CellState.RECOVERED, (double) prr));
             stateWeights.add(new Pair<>(CellState.DEAD, (double) pdr));
-            stateWeights.add(new Pair<>(CellState.QUARANTINED, (double) pqr));
+            stateWeights.add(new Pair<>(null, (double) pqr));
 
             newState = new EnumeratedDistribution<>(stateWeights).sample();
         }

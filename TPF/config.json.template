@@ -1,7 +1,7 @@
 {
-  "gridSize": 10,               # The size of the grid
-  "susceptible": 0.7,           # The proportion of cells that will initially be susceptible
-  "infected": 0.1,              # The proportion of cells that will initially be infected
+  "gridSize": 100,               # The size of the grid
+  "population": 0.8,            # The proportion of cells that will initially be susceptible
+  "infected": 0.1,              # The proportion of population that will initially be infected
   "cautiousness": 0.8,          # The probability of someone being cautious
   "distribution": "sparse",     # A uniform/normal initial people distribution will be used if "sparse"/"dense"
   "propagationDistance": 2,     # The max distance at which the virus can propagate

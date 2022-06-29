@@ -1,7 +1,7 @@
 {
-  "gridSize": 10,
-  "susceptible": 0.7,
-  "infected": 0.1,
+  "gridSize": 100,
+  "population": 0.3,
+  "infected": 0.05,
   "cautiousness": 0.8,
   "distribution": "sparse",
   "propagationDistance": 2,
@@ -22,5 +22,5 @@
     "mask": 0.8,
     "hospitalization": 0.6
   },
-  "maxIterations": 20
+  "maxIterations": 50
 }

@@ -27,12 +27,13 @@ public class Main {
 
         int maxIterations = json.getInt("maxIterations");
         int gridSize = json.getInt("gridSize");
-        float susceptible = json.getFloat("susceptible");
-        float infected = json.getFloat("infected");
+        float populationProp = json.getFloat("population");
+        float infectedProp = json.getFloat("infected");
         float cautiousness = json.getFloat("cautiousness");
         boolean sparse = json.getString("distribution").equals("sparse");
 
-        Cell[][] initialGrid = randomGrid(gridSize, susceptible, infected, cautiousness, sparse);
+        System.out.println("Generating grid...");
+        Cell[][] initialGrid = randomGrid(gridSize, populationProp, infectedProp, cautiousness, sparse);
 
         // Read evolution rule parameters
 
@@ -62,10 +63,12 @@ public class Main {
 
         // Run the simulation
 
+        System.out.println("Running automata...");
         List<Cell[][]> results = Automata.run(initialGrid, rule, maxIterations);
 
         // Write results to output
 
+        System.out.println("Writing output...");
         PrintWriter writer;
         try {
             writer = new PrintWriter("output.csv", "UTF-8");
@@ -88,23 +91,26 @@ public class Main {
         writer.close();
     }
 
-    static Cell[][] randomGrid(int L, float susceptibleProp, float infectedProp, float cautiousness, boolean sparse) {
+    static Cell[][] randomGrid(int L, float populationProp, float infectedProp, float cautiousness, boolean sparse) {
         double u = (double) L / 2;
         double sd = (double) (L / 4) / 3;
 
-        int susceptible = Math.round(L * L * susceptibleProp);
-        int infected = Math.round(L * L * infectedProp);
+        int population = Math.round(L * L * populationProp);
+        int infected = Math.round(population * infectedProp);
+
+        System.out.println(population);
+        System.out.println(infected);
 
         Random r = new Random();
         Map<Pair<Integer, Integer>, CellState> usedCoordinates = new HashMap<>();
         
         int x, y;
-        for(int i=0; i<susceptible + infected; i++){
+        for(int i=0; i<population; i++){
             do{
                 x = (int) Math.round(sparse ? r.nextFloat() * L : r.nextGaussian() * sd + u);
                 y = (int) Math.round(sparse ? r.nextFloat() * L : r.nextGaussian() * sd + u);
             } while(usedCoordinates.containsKey(new Pair<>(x, y)));
-            usedCoordinates.put(new Pair<>(x, y), i<susceptible ? CellState.SUSCEPTIBLE : CellState.INFECTED);
+            usedCoordinates.put(new Pair<>(x, y), i<population-infected ? CellState.SUSCEPTIBLE : CellState.INFECTED);
         }
 
         Cell[][] randomGrid = new Cell[L][L];
