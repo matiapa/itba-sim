@@ -6,10 +6,10 @@ public class Cell {
     private boolean cautious;
     private Integer lastT;
 
-    public Cell(CellState cellState, boolean cautiousLevel) {
+    public Cell(CellState cellState, boolean cautious) {
         this.cellState = cellState;
         this.lastT = 0;
-        this.cautious = cautiousLevel;
+        this.cautious = cautious;
     }
 
     public boolean isCautious() {

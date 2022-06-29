@@ -1,12 +1,25 @@
 {
-  "grid": {
-    "size": 20,
-    "type": "3D",
-    "method": "random",
-    "random": {
-      "aliveProportion": 0.15
-    }
+  "gridSize": 10,
+  "susceptible": 79,
+  "infected": 1,
+  "cautiousness": 0.8,
+  "distribution": "sparse",
+  "probabilities": {
+    "exposure": 0.1,
+    "infection": 0.1,
+    "quarantine": 0.1,
+    "recovery": 0.1,
+    "death": 0.1
   },
-  "evolutionRule": "1112",
+  "period": {
+    "infection": 1,
+    "quarantine": 1,
+    "recovery": 1,
+    "death": 1
+  },
+  "effectiveness": {
+    "mask": 0.9,
+    "hospitalization": 0.6
+  },
   "maxIterations": 20
 }
