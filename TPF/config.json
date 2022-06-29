@@ -1,24 +1,25 @@
 {
   "gridSize": 10,
-  "susceptible": 79,
-  "infected": 1,
+  "susceptible": 0.7,
+  "infected": 0.1,
   "cautiousness": 0.8,
   "distribution": "sparse",
+  "propagationDistance": 2,
   "probabilities": {
-    "exposure": 0.1,
-    "infection": 0.1,
+    "exposure": 0.5,
+    "infection": 0.5,
     "quarantine": 0.1,
-    "recovery": 0.1,
-    "death": 0.1
+    "recovery": 0.12,
+    "death": 0.04
   },
-  "period": {
-    "infection": 1,
-    "quarantine": 1,
-    "recovery": 1,
-    "death": 1
+  "periods": {
+    "infection": 8,
+    "quarantine": 2,
+    "recovery": 18,
+    "death": 18
   },
   "effectiveness": {
-    "mask": 0.9,
+    "mask": 0.8,
     "hospitalization": 0.6
   },
   "maxIterations": 20

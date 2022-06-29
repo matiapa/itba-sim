@@ -1,44 +1,41 @@
-import os
 import sys
 import numpy as np
 import pandas as pd
-import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib import animation
-from matplotlib.colors import ListedColormap, LinearSegmentedColormap
-from dotenv import load_dotenv
 from tqdm import tqdm
-
-load_dotenv()
-
-matplotlib.rcParams['animation.ffmpeg_path'] = os.getenv('ffmpeg_path')
 
 # ------------------------------------ 2D ANIMATION ------------------------------------
 
-def create_grid_2D(size, iteration):
-    grid = np.zeros((size, size))
+state_colors = {
+    "SUSCEPTIBLE": [0,0,1], "EXPOSED": [1,1,0], "INFECTED": [1,0,0], "QUARANTINED": [0.5,0.5,0.5],
+    "RECOVERED": [0,1,0], "DEATH": [0,0,0]
+}
 
-    max_distance = np.sqrt((size/2)**2 + (size/2)**2)
+def create_grid(size, iteration):
+    grid = np.ones((size, size, 3))
 
     rows = df.loc[df['t'] == iteration].values
     for row in rows:
-        grid[int(row[1]), int(row[2])] = np.sqrt((int(row[1]) - size/2)**2 + (int(row[2]) - size/2)**2) / max_distance
+        grid[int(row[1]), int(row[2]), :] = state_colors[row[3]]
 
     return grid
 
-def animate_step_2D(frame):
+def animate_step(frame):
     global grid_size, img_plot, load_iter, ax
 
     if frame > 0:
-        new_grid = create_grid_2D(grid_size, frame) 
+        new_grid = create_grid(grid_size, frame) 
         img_plot.set_data(new_grid)
+
+    plt.savefig(f"out/{frame}.png")
 
     try:
         load_iter.__next__()
     except:
         pass
 
-def plot_2D(size, animate=False):
+def plot(size, animate=False):
     global grid_size, img_plot
 
     fig, ax = plt.subplots(figsize=(8, 8))
@@ -52,80 +49,12 @@ def plot_2D(size, animate=False):
     plt.tight_layout()
 
     grid_size = size
-    grid = create_grid_2D(size, 0)
-    cmap = LinearSegmentedColormap.from_list('my_colormap', [(0, '#ffffff'),(0.0000000001, '#ff0000'), (0.4, '#ff9900'), (0.7, '#ffe135'), (1, '#00cd00')])   
-    img_plot = ax.imshow(grid, interpolation='nearest', cmap=cmap)
+    grid = create_grid(size, 0)
+    img_plot = ax.imshow(grid)
 
     if animate:
-        anim = animation.FuncAnimation(fig, frames=end_t, func=animate_step_2D, interval=50)
-#         video_writer = animation.FFMpegWriter(fps=2)
-        anim.save('out/animation_2D.gif')
-        # anim.save('out/animation_2D.mp4', writer=video_writer)
-    else:
-        plt.show()
-
-# ------------------------------------ 3D ANIMATION ------------------------------------
-
-def create_grid_3D(size, iteration):
-    grid = np.zeros((size, size, size))
-    colors = np.zeros((size, size, size))
-
-    max_distance = np.sqrt((size/2)**2 + (size/2)**2 + (size/2)**2)
-
-    rows = df.loc[df['t'] == iteration].values
-    for row in rows:
-        grid[int(row[1]), int(row[2]), int(row[3])] = np.sqrt((int(row[1]) - size/2)**2 + (int(row[2]) - size/2)**2 + (int(row[3]) - size/2)**2) / max_distance
-        colors[int(row[1]), int(row[2]), int(row[3])] = np.sqrt((int(row[1]) - size/2)**2 + (int(row[2]) - size/2)**2 + (int(row[3]) - size/2)**2) / max_distance
-
-
-    return grid, colors
-
-def animate_step_3D(frame):
-    global grid_size, ax, load_iter
-
-    if frame > 0:
-        filled, colors = create_grid_3D(grid_size, frame)
-
-        ax.clear()
-        ax.set_xlabel("x")
-        ax.set_ylabel("y")
-        ax.set_zlabel("z")
-        ax.voxels(filled, edgecolors='gray', shade=False, facecolors=plt.cm.viridis(colors))
-
-    try:
-        load_iter.__next__()
-    except:
-        pass
-
-def plot_3D(size, animate=False):
-    global grid_size, img_plot, ax
-
-    distances_to_center = list()
-    colors = list()
-    voxelarray = None
-    first_time = True
-
-    max_distance = np.sqrt((grid_size/2)**2 + (grid_size/2)**2 + (grid_size/2)**2)
-
-    fig = plt.figure()
-    ax = fig.add_subplot(projection='3d')
-    
-    ax.set_xlabel("x")
-    ax.set_ylabel("y")
-    ax.set_zlabel("z")
-    ax.grid(True)
-
-    plt.tight_layout()
-
-    grid_size = size
-    filled, colors = create_grid_3D(size, 0)
-    img_plot = ax.voxels(filled, edgecolors='gray', shade=False, facecolors=plt.cm.viridis(colors))
-
-    if animate:
-        anim = animation.FuncAnimation(fig, frames=end_t, func=animate_step_3D, interval=300)
-#         video_writer = animation.FFMpegWriter(fps=2)
-        anim.save('animation_3D.gif')
-        # anim.save('out/animation_3D.mp4', writer=video_writer)
+        anim = animation.FuncAnimation(fig, frames=end_t, func=animate_step, interval=1)
+        anim.save('out/animation.gif')
     else:
         plt.show()
 
@@ -134,7 +63,7 @@ def plot_3D(size, animate=False):
 df = pd.read_csv('output.csv')
 df.set_index(['t'])
 
-grid_size = 15
+grid_size = 10
 end_t = max(df['t'])
 
 load_iter = tqdm(range(end_t)).__iter__()
@@ -146,7 +75,4 @@ elif sys.argv[1] == 'snap':
 else:
     raise f'Unsupported operation {sys.argv[1]}'
 
-if 'z' in df.columns:
-    plot_3D(size = grid_size, animate = animate)
-else:
-    plot_2D(size = grid_size, animate = animate)
+plot(size = grid_size, animate = animate)

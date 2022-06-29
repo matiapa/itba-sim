@@ -12,9 +12,9 @@ import java.util.List;
 public class InfectionRule implements EvolutionRule {
 
     private final float pe, pq, pi, pr, pd, em, eq;
-    private final int ti, tq, tr, td;
+    private final int ti, tq, tr, td, r;
 
-    public InfectionRule(float pe, float pq, float pi, float pr, float pd, float em, float eq, int ti, int tq, int tr, int td) {
+    public InfectionRule(float pe, float pq, float pi, float pr, float pd, float em, float eq, int ti, int tq, int tr, int td, int r) {
         this.pe = pe;
         this.pq = pq;
         this.pi = pi;
@@ -26,6 +26,7 @@ public class InfectionRule implements EvolutionRule {
         this.tq = tq;
         this.tr = tr;
         this.td = td;
+        this.r = r;
     }
 
     @Override
@@ -36,8 +37,8 @@ public class InfectionRule implements EvolutionRule {
 
         if(cell.getCellState() == CellState.SUSCEPTIBLE) {
             int infectedNeighbours = 0;
-            for(int i = x - 1; i <= x + 1; i++) {
-                for(int j = y - 1; j <= y + 1; j++) {
+            for(int i = x - r; i <= x + r; i++) {
+                for(int j = y - r; j <= y + r; j++) {
                     if(i < 0 || i >= grid.length || j < 0 || j >= grid.length)
                         continue;
                     infectedNeighbours += grid[i][j].isInfected() && (i != x || j != y)  ? 1 : 0;

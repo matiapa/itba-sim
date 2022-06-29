@@ -1,25 +1,26 @@
 {
   "gridSize": 10,               # The size of the grid
-  "susceptible": 79,            # The initial number of susceptible people
-  "infected": 1,                # The initial number of infected people
+  "susceptible": 0.7,           # The proportion of cells that will initially be susceptible
+  "infected": 0.1,              # The proportion of cells that will initially be infected
   "cautiousness": 0.8,          # The probability of someone being cautious
   "distribution": "sparse",     # A uniform/normal initial people distribution will be used if "sparse"/"dense"
+  "propagationDistance": 2,     # The max distance at which the virus can propagate
   "probabilities": {            # The probabilities of transitioning to each state
-    "exposure": 0.1,
-    "infection": 0.1,
+    "exposure": 0.5,
+    "infection": 0.5,
     "quarantine": 0.1,
-    "recovery": 0.1,
-    "death": 0.1
+    "recovery": 0.12,
+    "death": 0.04
   },
-  "period": {                   # The minimum time interval before allowing transitioning to each state
-    "infection": 1,
-    "quarantine": 1,
-    "recovery": 1,
-    "death": 1
+  "periods": {                   # The minimum time interval before allowing transitioning to each state
+    "infection": 8,
+    "quarantine": 2,
+    "recovery": 18,
+    "death": 18
   },
-  "effectiveness": {            # The effectiveness of each instrument
-    "mask": 0.9,
-    "hospitalization": 0.6
+  "effectiveness": {
+    "mask": 0.8,                # If cautious, exposure probability is reduced (multiplying it) by (1-mask)
+    "hospitalization": 0.6      # If quarantined, death probability is reduced (multiplying it) by (1-hospitalization)
   },
   "maxIterations": 20           # The max number of iterations allowed
 }

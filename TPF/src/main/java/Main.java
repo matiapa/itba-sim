@@ -27,14 +27,16 @@ public class Main {
 
         int maxIterations = json.getInt("maxIterations");
         int gridSize = json.getInt("gridSize");
-        int susceptible = json.getInt("susceptible");
-        int infected = json.getInt("infected");
+        float susceptible = json.getFloat("susceptible");
+        float infected = json.getFloat("infected");
         float cautiousness = json.getFloat("cautiousness");
         boolean sparse = json.getString("distribution").equals("sparse");
 
         Cell[][] initialGrid = randomGrid(gridSize, susceptible, infected, cautiousness, sparse);
 
         // Read evolution rule parameters
+
+        int d = json.getInt("propagationDistance");
 
         JSONObject probabilities = (JSONObject) json.get("probabilities");
 
@@ -56,7 +58,7 @@ public class Main {
         float em = effectiveness.getFloat("mask");
         float eq = effectiveness.getFloat("hospitalization");
 
-        EvolutionRule rule = new InfectionRule(pe, pq, pi, pr, pd, em, eq, ti, tq, tr, td);
+        EvolutionRule rule = new InfectionRule(pe, pq, pi, pr, pd, em, eq, ti, tq, tr, td, d);
 
         // Run the simulation
 
@@ -77,10 +79,8 @@ public class Main {
             Cell[][] grid = results.get(t);
             for (int i = 0; i < grid.length; i++) {
                 for (int j = 0; j < grid[i].length; j++) {
-                    if (grid[i][j].getCellState() != CellState.EMPTY) {
-                        String cellState = grid[i][j].getCellState().toString().split("\\.")[1];
-                        writer.println(String.format("%d,%d,%d,%s", t, i, j, cellState));
-                    }
+                    if (grid[i][j].getCellState() != CellState.EMPTY)
+                        writer.println(String.format("%d,%d,%d,%s", t, i, j, grid[i][j].getCellState().toString()));
                 }
             }
         }
@@ -88,9 +88,12 @@ public class Main {
         writer.close();
     }
 
-    static Cell[][] randomGrid(int L, int susceptible, int infected, float cautiousness, boolean sparse) {
+    static Cell[][] randomGrid(int L, float susceptibleProp, float infectedProp, float cautiousness, boolean sparse) {
         double u = (double) L / 2;
         double sd = (double) (L / 4) / 3;
+
+        int susceptible = Math.round(L * L * susceptibleProp);
+        int infected = Math.round(L * L * infectedProp);
 
         Random r = new Random();
         Map<Pair<Integer, Integer>, CellState> usedCoordinates = new HashMap<>();
@@ -98,8 +101,8 @@ public class Main {
         int x, y;
         for(int i=0; i<susceptible + infected; i++){
             do{
-                x = (int) Math.round(sparse ? r.nextFloat() * L : r.nextGaussian(u, sd));
-                y = (int) Math.round(sparse ? r.nextFloat() * L : r.nextGaussian(u, sd));
+                x = (int) Math.round(sparse ? r.nextFloat() * L : r.nextGaussian() * sd + u);
+                y = (int) Math.round(sparse ? r.nextFloat() * L : r.nextGaussian() * sd + u);
             } while(usedCoordinates.containsKey(new Pair<>(x, y)));
             usedCoordinates.put(new Pair<>(x, y), i<susceptible ? CellState.SUSCEPTIBLE : CellState.INFECTED);
         }
