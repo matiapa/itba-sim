@@ -3,44 +3,33 @@ package cell;
 public class Cell {
 
     private CellState cellState;
-    private CautiousLevel cautiousLevel;
-    private Integer deadIteration;
+    private boolean cautious;
+    private Integer lastT;
 
-    public Cell(CellState cellState, CautiousLevel cautiousLevel) {
+    public Cell(CellState cellState, boolean cautiousLevel) {
         this.cellState = cellState;
-        this.deadIteration = 0;
-        this.cautiousLevel = cautiousLevel;
+        this.lastT = 0;
+        this.cautious = cautiousLevel;
     }
 
-    public CautiousLevel getCautiousLevel() {
-        return cautiousLevel;
-    }
-
-    public void setCautiousLevel(CautiousLevel cautiousLevel) {
-        this.cautiousLevel = cautiousLevel;
+    public boolean isCautious() {
+        return cautious;
     }
 
     public CellState getCellState() {
         return cellState;
     }
 
-    public void setCellState(CellState cellState) {
-        this.cellState = cellState;
+    public Integer getLastT() {
+        return lastT;
     }
 
-    public Integer getDeadIteration() {
-        return deadIteration;
-    }
-
-    public void setDeadIteration(Integer deadIteration) {
-        this.deadIteration = deadIteration;
+    public void setLastT(Integer lastT) {
+        this.lastT = lastT;
     }
 
     public boolean isInfected() {
         return cellState == CellState.INFECTED || cellState == CellState.EXPOSED;
     }
 
-    public boolean isQuarantined() {
-        return cellState == CellState.QUARANTINED;
-    }
 }

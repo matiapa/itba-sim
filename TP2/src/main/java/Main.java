@@ -222,8 +222,6 @@ public class Main {
         double u = (double) L / 2;
         double sd = (double) (L / 4) / 3;
 
-
-
         Random r = new Random();
         Set<Point3D> aliveCellsCoordinates = new HashSet<>();
         int x, y, z;
