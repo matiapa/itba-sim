@@ -6,6 +6,8 @@ public class Cell {
     private boolean cautious;
     private Integer lastT;
 
+    private Integer infectedNeighbours;
+
     public Cell(CellState cellState, boolean cautious) {
         this.cellState = cellState;
         this.lastT = 0;

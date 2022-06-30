@@ -1,2 +1,4 @@
 .env
 *.csv
+out/
+config.json
