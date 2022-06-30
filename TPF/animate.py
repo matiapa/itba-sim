@@ -9,7 +9,7 @@ from tqdm import tqdm
 
 state_colors = {
     "SUSCEPTIBLE": [0,0,1], "EXPOSED": [1,1,0], "INFECTED": [1,0,0], "QUARANTINED": [0.5,0.5,0.5],
-    "RECOVERED": [0,1,0], "DEAD": [0,0,0]
+    "RECOVERED": [0,1,0], "DEAD": [1,1,1]
 }
 
 def create_grid(size, iteration):

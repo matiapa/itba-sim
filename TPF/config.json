@@ -22,5 +22,5 @@
     "mask": 0.8,
     "hospitalization": 0.6
   },
-  "maxIterations": 50
+  "maxIterations": 100
 }

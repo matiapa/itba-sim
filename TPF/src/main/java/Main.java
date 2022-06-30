@@ -98,9 +98,6 @@ public class Main {
         int population = Math.round(L * L * populationProp);
         int infected = Math.round(population * infectedProp);
 
-        System.out.println(population);
-        System.out.println(infected);
-
         Random r = new Random();
         Map<Pair<Integer, Integer>, CellState> usedCoordinates = new HashMap<>();
         
