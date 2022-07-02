@@ -4,6 +4,9 @@ import evolutionRules.EvolutionRule;
 import org.apache.commons.math3.distribution.EnumeratedDistribution;
 import org.apache.commons.math3.util.Pair;
 
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -12,14 +15,19 @@ import java.util.stream.Collectors;
 
 public class Automata {
 
-    public static List<Cell[][]> run(Cell[][] grid, EvolutionRule rule, int iterations) {
+    public static Result run(Cell[][] grid, EvolutionRule rule, int iterations) throws FileNotFoundException, UnsupportedEncodingException {
         int L = grid.length;
         List<Cell[][]> grids = new ArrayList<>();
         grids.add(grid);
 
+        List<Integer> newInfected = new ArrayList<>();
+        List<Integer> infectedAmount = new ArrayList<>();
+
         Cell[][] newGrid;
         for(int t=0; t<iterations; t++) {
             newGrid = new Cell[L][L];
+            int amountInfected = 0;
+            int infected = 0;
 
             boolean finished = true;
             for(int x=0; x<L; x++) {
@@ -27,13 +35,22 @@ public class Automata {
                     newGrid[x][y] = rule.evaluate(t, x, y, grid);
 
                     CellState state = newGrid[x][y].getCellState();
-                    if(state == CellState.EXPOSED || state == CellState.INFECTED || state == CellState.QUARANTINED)
+                    if(state == CellState.EXPOSED || state == CellState.INFECTED || state == CellState.QUARANTINED) {
                         finished = false;
+                        infected++;
+                    }
+
+                    if ((state == CellState.EXPOSED || state == CellState.INFECTED) && grid[x][y].getCellState() != CellState.EXPOSED && grid[x][y].getCellState() != CellState.INFECTED) {
+                        amountInfected++;
+                    }
                 }
             }
 
+            newInfected.add(amountInfected);
+            infectedAmount.add(infected);
+
             if(finished)
-                return grids;
+                break;
 
             for(int x=0; x<L; x++)
                 for(int y=0; y<L; y++)
@@ -45,7 +62,7 @@ public class Automata {
             }
         }
 
-        return grids;
+        return new Result(grids, newInfected, infectedAmount);
     }
 
     private static void move(Cell[][] grid, int x, int y) {
@@ -65,7 +82,6 @@ public class Automata {
                     if(grid[x][y].isCautious()) {
                         for (int x2 = Math.max(x1 - 1, 0); x2 <= Math.min(x1 + 1, grid.length - 1); x2++)
                             for (int y2 = Math.max(y1 - 1, 0); y2 <= Math.min(y1 + 1, grid.length - 1); y2++)
-
                                 if (grid[x2][y2].isInfected() && x2 != x && y2 != y)
                                     potentials.put(pos, potentials.get(pos) + 1);
                     }

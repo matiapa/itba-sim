@@ -64,7 +64,16 @@ public class Main {
         // Run the simulation
 
         System.out.println("Running automata...");
-        List<Cell[][]> results = Automata.run(initialGrid, rule, maxIterations);
+        Result result = Automata.run(initialGrid, rule, maxIterations);
+        List<Cell[][]> results = result.getGrid();
+
+        // Write R0 results
+        PrintWriter writerR0 = new PrintWriter("r0.csv");
+        writerR0.println("t,infected,newInfected");
+        for (int i = 0; i < result.getNewInfectedPerIteration().size(); i++) {
+            writerR0.println(String.format("%d,%d,%d",i, result.getInfectedAmountPerIteration().get(i), result.getNewInfectedPerIteration().get(i)));
+        }
+        writerR0.close();
 
         // Write results to output
 
@@ -76,6 +85,8 @@ public class Main {
             System.out.println("Couldn't create output file 'output.csv'");
             return;
         }
+
+        System.out.println("Finished in "+results.size());
 
         writer.println("t,x,y,state");
         for (int t = 0; t < results.size(); t++) {
